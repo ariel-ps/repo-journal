@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+# herdr-journal: lightweight .journal/ CLI for agent investigations.
+set -euo pipefail
+
+prog="herdr-journal"
+
+usage() {
+  cat <<'EOF'
+usage: herdr-journal <command> [args]
+
+commands:
+  new <slug> [title words...]   create today's entry for <slug>, print its path
+  add <slug> <text...>          append a timestamped note to <slug>'s latest entry
+  list [-a|--all]               list entries newest-first (default: last 20)
+  show <slug>                   print the most recent entry matching <slug>
+  path                          print the .journal dir for this project (creating it)
+
+<slug> is matched by filename: YYYY-MM-DD-<slug>.md
+EOF
+}
+
+slugify() {
+  printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g'
+}
+
+journal_dir() {
+  local dir="$PWD"
+  while [ "$dir" != "/" ]; do
+    if [ -d "$dir/.journal" ]; then printf '%s\n' "$dir/.journal"; return 0; fi
+    if [ -d "$dir/.git" ]; then printf '%s\n' "$dir/.journal"; return 0; fi
+    dir=$(dirname "$dir")
+  done
+  printf '%s\n' "$PWD/.journal"
+}
+
+ensure_journal_dir() {
+  local dir
+  dir=$(journal_dir)
+  mkdir -p "$dir"
+  printf '%s\n' "$dir"
+}
+
+# latest file matching a slug, or empty
+latest_for_slug() {
+  local dir="$1" slug="$2"
+  find "$dir" -maxdepth 1 -type f -name "*-${slug}.md" 2>/dev/null | sort -r | head -n1
+}
+
+cmd_new() {
+  local slug_raw="${1:-}"; shift || true
+  [ -n "$slug_raw" ] || { echo "$prog: new requires a slug" >&2; exit 2; }
+  local title="${*:-$slug_raw}"
+  local slug; slug=$(slugify "$slug_raw")
+  local dir; dir=$(ensure_journal_dir)
+  local date; date=$(date +%Y-%m-%d)
+  local file="$dir/${date}-${slug}.md"
+  if [ -e "$file" ]; then
+    printf '%s\n' "$file"
+    return 0
+  fi
+  {
+    printf '# %s\n\n' "$title"
+    printf '_Investigation started %s_\n\n' "$(date '+%Y-%m-%d %H:%M')"
+    printf '## Findings\n'
+  } > "$file"
+  printf '%s\n' "$file"
+}
+
+cmd_add() {
+  local slug_raw="${1:-}"; shift || true
+  [ -n "$slug_raw" ] || { echo "$prog: add requires a slug" >&2; exit 2; }
+  [ "$#" -gt 0 ] || { echo "$prog: add requires note text" >&2; exit 2; }
+  local slug; slug=$(slugify "$slug_raw")
+  local dir; dir=$(ensure_journal_dir)
+  local file; file=$(latest_for_slug "$dir" "$slug")
+  if [ -z "$file" ]; then
+    file=$(cmd_new "$slug_raw")
+  fi
+  printf -- '- **%s** %s\n' "$(date '+%H:%M')" "$*" >> "$file"
+  printf '%s\n' "$file"
+}
+
+cmd_list() {
+  local all=0
+  for a in "$@"; do
+    case "$a" in
+      -a|--all) all=1 ;;
+    esac
+  done
+  local dir; dir=$(journal_dir)
+  [ -d "$dir" ] || { echo "$prog: no .journal found under $PWD" >&2; return 1; }
+  local files
+  files=$(find "$dir" -maxdepth 1 -type f -name '*.md' 2>/dev/null | sort -r)
+  [ -n "$files" ] || { echo "$prog: $dir is empty" >&2; return 0; }
+  [ "$all" -eq 1 ] || files=$(printf '%s\n' "$files" | head -n20)
+  printf '%s\n' "$files" | while IFS= read -r f; do
+    local title
+    title=$(sed -n '1s/^# //p' "$f")
+    printf '%s  %s\n' "$(basename "$f" .md)" "${title:-untitled}"
+  done
+}
+
+cmd_show() {
+  local slug_raw="${1:-}"
+  [ -n "$slug_raw" ] || { echo "$prog: show requires a slug" >&2; exit 2; }
+  local slug; slug=$(slugify "$slug_raw")
+  local dir; dir=$(journal_dir)
+  local file; file=$(latest_for_slug "$dir" "$slug")
+  [ -n "$file" ] || { echo "$prog: no entry matching '$slug_raw' under $dir" >&2; exit 1; }
+  cat "$file"
+}
+
+cmd_path() {
+  ensure_journal_dir
+}
+
+main() {
+  local cmd="${1:-}"; shift || true
+  case "$cmd" in
+    new)  cmd_new "$@" ;;
+    add)  cmd_add "$@" ;;
+    list) cmd_list "$@" ;;
+    show) cmd_show "$@" ;;
+    path) cmd_path "$@" ;;
+    -h|--help|help|"") usage ;;
+    *) echo "$prog: unknown command '$cmd'" >&2; usage >&2; exit 2 ;;
+  esac
+}
+
+main "$@"
