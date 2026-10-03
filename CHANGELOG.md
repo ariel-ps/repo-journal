@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1
+
+- Git-ignore `libexec/repo-journal` so plugin builds do not dirty Herdr’s managed clone (fixes setup “local changes” on reinstall).
+
 ## 0.4.0
 
 - Rewrote the CLI in **Rust** (drops Node/Bun runtime; committed `libexec/repo-journal` binary).

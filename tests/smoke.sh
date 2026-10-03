@@ -59,14 +59,17 @@ action_root=$(cd "$root" && HERDR_PLUGIN_CONTEXT_JSON="$action_context" "$bin" r
   exit 1
 }
 
-# The committed binary must run without a local Cargo build in the plugin root.
+# Installed layout: launcher + libexec binary produced by the plugin build.
 isolated="$tmp/plugin bundle"
 mkdir -p "$isolated/bin" "$isolated/libexec"
 cp "$root/bin/repo-journal" "$isolated/bin/repo-journal"
+if [ ! -x "$root/libexec/repo-journal" ]; then
+  sh "$root/scripts/build/install.sh"
+fi
 cp "$root/libexec/repo-journal" "$isolated/libexec/repo-journal"
 chmod +x "$isolated/bin/repo-journal" "$isolated/libexec/repo-journal"
 "$isolated/bin/repo-journal" --version >/dev/null || {
-  echo "FAIL: committed libexec binary is missing or not executable" >&2
+  echo "FAIL: libexec binary missing; run scripts/build/install.sh" >&2
   exit 1
 }
 

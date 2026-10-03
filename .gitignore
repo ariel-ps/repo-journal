@@ -2,4 +2,6 @@
 node_modules/
 target/
 *.log
+/libexec/repo-journal
+/libexec/.repo-journal.*
 __pycache__/

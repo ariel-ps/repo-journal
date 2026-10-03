@@ -28,7 +28,7 @@ Standalone (Herdr 0.9.3+ host):
 herdr plugin install ariel-ps/repo-journal --ref main --yes
 ```
 
-Rebuild requires **Rust/Cargo** (see `rust-version` in `Cargo.toml`). Installed plugins use the committed `libexec/repo-journal` binary.
+Rebuild requires **Rust/Cargo** (see `rust-version` in `Cargo.toml`). `scripts/build/install.sh` places the release binary in `libexec/` (gitignored, like Herdr Alerts).
 
 ## Develop
 
