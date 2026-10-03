@@ -14,7 +14,7 @@ Get commands and flags from the live CLI (source of truth):
 - `repo-journal --help`
 - `repo-journal <command> --help`
 
-Run via the plugin on `PATH`, or `node <plugin-root>/dist/bin/repo-journal.js`.
+Run via the plugin on `PATH`, or `<plugin-root>/libexec/repo-journal`.
 
 ## Rules
 
