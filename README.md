@@ -30,6 +30,19 @@ herdr plugin install ariel-ps/repo-journal --ref main --yes
 
 Rebuild requires **Rust/Cargo** (see `rust-version` in `Cargo.toml`). `scripts/build/install.sh` places the release binary in `libexec/` (gitignored, like Herdr Alerts).
 
+### Tab completion
+
+Herdr loads `shell.zsh` / `shell.bash`, which register completion for `repo-journal` (commands, flags, and journal slugs from the current git repo).
+
+Standalone:
+
+```sh
+source /path/to/repo-journal/completions/repo-journal.zsh   # zsh
+source /path/to/repo-journal/completions/repo-journal.bash # bash
+```
+
+Slugs come from `repo-journal complete slugs` (one slug per line; empty outside a git repo).
+
 ## Develop
 
 ```sh
@@ -45,6 +58,7 @@ python3 tests/test_manifest.py
 - `src/` — Rust CLI and library.
 - `bin/repo-journal` — shell launcher on `PATH`.
 - `libexec/repo-journal` — release binary (built locally; gitignored).
+- `completions/` — bash and zsh tab completion.
 - `skills/repo-journal/` — agent skill.
 - `tests/` — smoke and manifest contract tests.
 

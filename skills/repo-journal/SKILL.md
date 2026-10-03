@@ -14,7 +14,7 @@ Get commands and flags from the live CLI (source of truth):
 - `repo-journal --help`
 - `repo-journal <command> --help`
 
-Run via the plugin on `PATH`, or `<plugin-root>/libexec/repo-journal`.
+Run via the plugin on `PATH`, or `<plugin-root>/libexec/repo-journal`. Plugin `shell.zsh` / `shell.bash` enable tab completion (commands, flags, slugs via `complete slugs`).
 
 ## Rules
 

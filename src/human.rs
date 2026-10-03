@@ -59,6 +59,7 @@ pub fn format_help() -> String {
   root                   Print git repository root
   doctor                 Check gitignore and git policy
   ensure-gitignore       Append /.journal/ to .gitignore
+  complete slugs         Slug list for shell tab completion
 
 {}
   --plain    Scripting: paths or raw text only
@@ -74,6 +75,10 @@ pub fn format_help() -> String {
   repo-journal list
   repo-journal show auth-timeout --full
   repo-journal doctor
+
+Shell
+  source completions/repo-journal.zsh   # zsh (also via plugin shell.zsh)
+  source completions/repo-journal.bash  # bash (also via plugin shell.bash)
 "#,
         Style::detect().bold("repo-journal"),
         Style::detect().bold("Usage"),

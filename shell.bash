@@ -4,4 +4,10 @@ case ":$PATH:" in
   *":$_repo_journal_root/bin:"*) ;;
   *) PATH="$_repo_journal_root/bin:$PATH" ;;
 esac
+export REPO_JOURNAL_CLI="$_repo_journal_root/bin/repo-journal"
+
+if [[ -r "$_repo_journal_root/completions/repo-journal.bash" ]]; then
+  # shellcheck source=completions/repo-journal.bash
+  source "$_repo_journal_root/completions/repo-journal.bash"
+fi
 unset _repo_journal_root

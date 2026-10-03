@@ -28,6 +28,7 @@ same_file=$("$bin" new "auth-timeout" "ignored title" --plain)
 grep -q "repro'd at 40 concurrent logins" "$file" || { echo "FAIL: add did not append" >&2; exit 1; }
 
 "$bin" list --plain | grep -q "auth-timeout" || { echo "FAIL: list from subdir found nothing" >&2; exit 1; }
+"$bin" complete slugs | grep -qx "auth-timeout" || { echo "FAIL: complete slugs missing auth-timeout" >&2; exit 1; }
 "$bin" list -a --plain | grep -q "auth-timeout" || { echo "FAIL: list -a compatibility failed" >&2; exit 1; }
 "$bin" show auth-timeout --plain | grep -q "repro'd at 40 concurrent logins" || { echo "FAIL: show from subdir missing content" >&2; exit 1; }
 

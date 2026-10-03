@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::io::{self, Write};
 use serde_json::{json, Value};
 
@@ -133,6 +133,10 @@ pub fn run(args: Vec<String>) -> Result<()> {
     let command = argv[0].clone();
     let rest: Vec<String> = argv[1..].to_vec();
 
+    if command == "complete" {
+        return cmd_complete(&rest);
+    }
+
     let ctx = match journal_context_from_env() {
         Ok(c) => c,
         Err(e) => return fail_or_return(e, json_errors),
@@ -169,6 +173,37 @@ fn fail_or_return(err: CliError, json: bool) -> Result<()> {
         std::process::exit(err.exit_code().into());
     }
     Err(err)
+}
+
+fn cmd_complete(args: &[String]) -> Result<()> {
+    let flags = parse_global_flags(args);
+    if flags.stripped.len() != 1 || flags.stripped[0] != "slugs" {
+        return Err(
+            CliError::new("VALIDATION_ERROR", "complete requires: slugs").with_suggestions(vec![
+                "repo-journal complete slugs",
+            ]),
+        );
+    }
+    if flags.plain || flags.json || flags.toon {
+        return Err(CliError::new(
+            "VALIDATION_ERROR",
+            "complete slugs does not accept output flags",
+        ));
+    }
+
+    let Ok(ctx) = journal_context_from_env() else {
+        return Ok(());
+    };
+    let Ok(entries) = list_entries(&ctx.journal_dir) else {
+        return Ok(());
+    };
+    let mut seen = BTreeSet::new();
+    for entry in entries {
+        if seen.insert(entry.slug.clone()) {
+            print_out(&format!("{}\n", entry.slug))?;
+        }
+    }
+    Ok(())
 }
 
 fn unexpected_args(stripped: &[String]) -> Result<()> {
