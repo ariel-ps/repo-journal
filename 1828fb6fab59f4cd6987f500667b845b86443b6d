@@ -1,0 +1,35 @@
+tests/test_manifest.py
+  37cdea2bc419c064 14
+README.md
+  37cdea2bc419c064 31
+CHANGELOG.md
+  37cdea2bc419c064 3-6
+herdr-plugin.toml
+  37cdea2bc419c064 3
+.gitignore
+  37cdea2bc419c064 5-6
+Cargo.toml
+  37cdea2bc419c064 3
+tests/smoke.sh
+  37cdea2bc419c064 62,66-68,72
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "2.0.0",
+  "base_commit_sha": "1828fb6fab59f4cd6987f500667b845b86443b6d",
+  "prompts": {
+    "37cdea2bc419c064": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "63760873-492d-4aea-9e9f-c9a70eaefd5c",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "ariel-ps <ariel@prompt.security>",
+      "messages": [],
+      "total_additions": 15,
+      "total_deletions": 6,
+      "accepted_lines": 15,
+      "overriden_lines": 0
+    }
+  }
+}
