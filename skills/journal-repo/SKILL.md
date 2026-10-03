@@ -16,7 +16,7 @@ Get commands and flags from the live CLI (source of truth):
 
 Run via the plugin on `PATH`, or `<plugin-root>/libexec/journal-repo`. Plugin `shell.zsh` / `shell.bash` enable tab completion (commands, flags, slugs via `complete slugs`).
 
-**Requires [Treehouse](https://github.com/kunchenguid/treehouse) on PATH.** Run agents in `treehouse` worktrees; log with `journal-repo` (journal always on the main checkout). Use `journal-repo engine` to inspect roots and pool status. Do not add `.journal/` to `.worktreeinclude`.
+**Requires [Treehouse](https://github.com/kunchenguid/treehouse) on PATH** — the only worktree backend journal-repo supports (no other engine or backend). Run agents in Treehouse pool slots; log with `journal-repo` (journal always on the main checkout). Use `journal-repo treehouse` to inspect roots and pool status. Do not add `.journal/` to `.worktreeinclude`.
 
 ## Rules
 

@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use crate::engine::{resolve_roots, treehouse_version};
+use crate::treehouse::{resolve_roots, treehouse_version};
 use crate::error::{CliError, Result};
 
 #[derive(Debug, Clone)]

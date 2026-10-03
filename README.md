@@ -22,11 +22,11 @@ Each entry is a markdown file plus an optional **bundle directory** with the sam
 
 ### Requires [Treehouse](https://github.com/kunchenguid/treehouse)
 
-Journal Repo is a thin journal layer on top of Treehouse. It does **not** implement worktree pooling: every command expects `treehouse` on `PATH`. Workspace roots and pool status come from Treehouse; this tool only writes `.journal/`, attachments, and gitignore policy on the **main checkout** while you or agents work in pool slots.
+Journal Repo is a thin journal layer on top of **[Treehouse](https://github.com/kunchenguid/treehouse)** — the **only** supported worktree backend (no env switch, no alternate engines). It does **not** implement worktree pooling: every command expects `treehouse` on `PATH`. Pool status and slot paths come from Treehouse; this tool only writes `.journal/`, attachments, and gitignore policy on the **main checkout** while you or agents work in pool slots.
 
 ```sh
 curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh
-journal-repo engine    # treehouse version, active vs journal root, pool summary
+journal-repo treehouse   # version, active vs journal root, pool summary
 ```
 
 Do **not** add `.journal/` to `.worktreeinclude` — the journal stays on the main tree only.

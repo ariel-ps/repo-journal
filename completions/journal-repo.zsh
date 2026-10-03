@@ -45,7 +45,7 @@ _journal_repo() {
 
   if (( CURRENT == 2 )); then
     _values 'command' \
-      dashboard new add attach files list show path root doctor ensure-gitignore complete engine
+      dashboard new add attach files list show path root doctor ensure-gitignore complete treehouse engine
     return
   fi
 

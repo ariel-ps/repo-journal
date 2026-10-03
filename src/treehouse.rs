@@ -7,7 +7,6 @@ use serde_json::Value;
 use crate::error::{CliError, Result};
 use crate::git::{git_status, resolve_repo_root, GitStatus};
 
-pub const ENGINE: &str = "treehouse";
 const INSTALL_HINT: &str = "install treehouse: curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh";
 
 #[derive(Debug, Clone)]

@@ -9,8 +9,7 @@ use crate::gitignore::{ensure_journal_gitignore, journal_ignored_in_gitignore};
 use std::path::Path;
 
 use crate::artifacts::{self, artifact_dir_for_entry, cmd_attach, list_artifact_paths};
-use crate::engine::{git_status_for_journal, pool_status, summarize_pool};
-use crate::ENGINE;
+use crate::treehouse::{git_status_for_journal, pool_status, summarize_pool};
 use crate::journal::{
     cmd_add, cmd_new, ensure_journal_dir, latest_for_slug, list_entries, read_entry_content,
     require_slug, JournalEntryMeta,
@@ -190,7 +189,7 @@ pub fn run(args: Vec<String>) -> Result<()> {
         "ensure-gitignore" => cmd_ensure_gitignore(&rest, &ctx),
         "attach" => cmd_attach_handler(&rest, &ctx),
         "files" => cmd_files_handler(&rest, &ctx),
-        "engine" => cmd_engine(&rest, &ctx),
+        "treehouse" | "engine" => cmd_treehouse(&rest, &ctx),
         other => {
             let err = CliError::new(
                 "VALIDATION_ERROR",
@@ -298,7 +297,6 @@ fn cmd_dashboard(args: &[String], ctx: &JournalContext) -> Result<()> {
     let help: Vec<&str> = help_strings.iter().map(String::as_str).collect();
 
     let mut body = home_header(crate::DESCRIPTION);
-    body.insert("engine".into(), json!(ENGINE));
     body.insert("treehouse_version".into(), json!(ctx.treehouse_version));
     body.insert("active_root".into(), json!(ctx.active_root));
     body.insert("repo_root".into(), json!(ctx.repo_root));
@@ -658,22 +656,21 @@ fn cmd_files_handler(args: &[String], ctx: &JournalContext) -> Result<()> {
     Ok(())
 }
 
-fn cmd_engine(args: &[String], ctx: &JournalContext) -> Result<()> {
+fn cmd_treehouse(args: &[String], ctx: &JournalContext) -> Result<()> {
     let flags = parse_global_flags(args);
     unexpected_args(&flags.stripped)?;
     if flags.plain {
-        return print_out(&format!("{ENGINE}\n"));
+        return print_out("treehouse\n");
     }
     let pool = summarize_pool(&pool_status(&ctx.cwd)?);
     let body = json!({
-        "engine": ENGINE,
         "treehouse_version": ctx.treehouse_version,
         "active_root": ctx.active_root,
         "journal_root": ctx.repo_root,
         "journal_dir": ctx.journal_dir,
         "treehouse_pool": pool,
     });
-    let human = human::format_engine(
+    let human = human::format_treehouse(
         ctx.treehouse_version.as_deref(),
         &ctx.active_root,
         &ctx.repo_root,

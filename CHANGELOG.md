@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.1
+
+- Treehouse is the only worktree backend: `journal-repo treehouse` replaces generic `engine` in docs; `engine` remains a deprecated alias.
+- Dashboard/JSON drop the generic `engine` field; use `treehouse_version` and `treehouse_pool`.
+
 ## 0.8.0
 
 - Renamed CLI and Herdr plugin to **journal-repo** (`dev.ariel.journal-repo`). GitHub repository remains `ariel-ps/repo-journal`.

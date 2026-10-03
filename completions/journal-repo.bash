@@ -18,7 +18,7 @@ _journal_repo() {
   done
 
   local global_opts="--plain --json --toon -h --help -v --version"
-  local commands="dashboard new add attach files list show path root doctor ensure-gitignore complete engine"
+  local commands="dashboard new add attach files list show path root doctor ensure-gitignore complete treehouse engine"
 
   if [[ $cur == -* ]]; then
     case $cmd in
@@ -59,7 +59,7 @@ _journal_repo() {
         COMPREPLY=( $(compgen -W "slugs" -- "$cur") )
       fi
       ;;
-    new|list|dashboard|path|root|doctor|ensure-gitignore|engine)
+    new|list|dashboard|path|root|doctor|ensure-gitignore|treehouse|engine)
       ;;
   esac
 }

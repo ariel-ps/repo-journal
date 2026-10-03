@@ -1,11 +1,10 @@
 use std::io::IsTerminal;
 use std::path::Path;
 
-use crate::engine::PoolSummary;
+use crate::treehouse::PoolSummary;
 use crate::git::GitStatus;
 use crate::journal::JournalEntryMeta;
 use crate::output::collapse_home;
-use crate::ENGINE;
 use crate::VERSION;
 
 pub struct Style {
@@ -64,7 +63,7 @@ pub fn format_help() -> String {
   doctor                 Check gitignore and git policy
   ensure-gitignore       Append /.journal/ to .gitignore
   complete slugs         Slug list for shell tab completion
-  engine                 Show workspace engine and roots
+  treehouse              Show Treehouse version, roots, and pool
 
 {}
   --plain    Scripting: paths or raw text only
@@ -83,7 +82,7 @@ pub fn format_help() -> String {
   journal-repo files auth-timeout
   journal-repo doctor
 
-Requires [Treehouse](https://github.com/kunchenguid/treehouse) on PATH. Journal lives on the main checkout; pool status from `treehouse status --json`.
+Requires [Treehouse](https://github.com/kunchenguid/treehouse) on PATH (only supported worktree backend). Journal lives on the main checkout; pool status from `treehouse status --json`. `engine` is a deprecated alias for `treehouse`.
 
 Shell
   source completions/journal-repo.zsh   # zsh (also via plugin shell.zsh)
@@ -116,14 +115,14 @@ pub fn format_dashboard(
 ) -> String {
     let mut out = String::new();
     out.push_str(&format!("{} {}\n\n", style.bold("Journal Repo"), VERSION));
-    let engine_line = match treehouse_version {
-        Some(v) => format!("{ENGINE} {v}"),
-        None => ENGINE.to_string(),
+    let treehouse_line = match treehouse_version {
+        Some(v) => format!("treehouse {v}"),
+        None => "treehouse (version unknown)".to_string(),
     };
     out.push_str(&format!(
         "  {:<10} {}\n",
-        style.dim("Engine"),
-        engine_line
+        style.dim("Treehouse"),
+        treehouse_line
     ));
     if active_root != journal_root {
         out.push_str(&format!(
@@ -396,19 +395,19 @@ pub fn format_path_label(label: &str, path: &Path) -> String {
     format!("{label}: {}\n", display_path(path))
 }
 
-pub fn format_engine(
+pub fn format_treehouse(
     treehouse_version: Option<&str>,
     active_root: &Path,
     journal_root: &Path,
     pool: &PoolSummary,
 ) -> String {
     let style = Style::detect();
-    let mut out = format!("{}\n", style.bold("Journal Repo engine"));
+    let mut out = format!("{}\n", style.bold("Treehouse"));
     out.push_str(&format!(
-        "  engine:       {}\n",
+        "  version:      {}\n",
         treehouse_version
-            .map(|v| format!("{ENGINE} {v}"))
-            .unwrap_or_else(|| ENGINE.to_string())
+            .map(|v| v.to_string())
+            .unwrap_or_else(|| "(unknown)".to_string())
     ));
     out.push_str(&format!(
         "  active root:  {}\n",
