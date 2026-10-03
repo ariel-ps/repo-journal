@@ -13,6 +13,7 @@ pub struct JournalEntryMeta {
     pub title: String,
     pub basename: String,
     pub path: String,
+    pub attachments: usize,
 }
 
 pub fn slugify(raw: &str) -> String {
@@ -228,6 +229,7 @@ pub fn list_entries(journal_dir: &Path) -> Result<Vec<JournalEntryMeta>> {
             title: read_title(&path)?,
             basename: base.strip_suffix(".md").unwrap_or(base).to_string(),
             path: path.to_string_lossy().into_owned(),
+            attachments: 0,
         });
     }
     Ok(out)
@@ -281,8 +283,12 @@ pub fn cmd_add(
         None => cmd_new(journal_dir, slug_raw, &[slug_raw.to_string()])?.0,
     };
     let note = note_parts.join(" ");
-    append_regular_file(&file, &format!("- **{}** {note}\n", now_time()))?;
+    append_bullet(&file, &note)?;
     Ok((file, slug))
+}
+
+pub fn append_bullet(path: &Path, note: &str) -> Result<()> {
+    append_regular_file(path, &format!("- **{}** {note}\n", now_time()))
 }
 
 pub fn read_entry_content(path: &Path, full: bool) -> Result<(String, bool)> {

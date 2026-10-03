@@ -1,13 +1,18 @@
 use std::path::{Path, PathBuf};
 
+use crate::engine::{resolve_roots, treehouse_version};
 use crate::error::{CliError, Result};
-use crate::git::resolve_repo_root;
 
 #[derive(Debug, Clone)]
 pub struct JournalContext {
+    /// Main checkout where `.journal/` lives (Treehouse seed source).
     pub repo_root: PathBuf,
+    /// Worktree the user or agent is operating in (may be a Treehouse pool slot).
+    pub active_root: PathBuf,
     pub journal_dir: PathBuf,
     pub cwd: PathBuf,
+    pub worktree_roots: Vec<PathBuf>,
+    pub treehouse_version: Option<String>,
 }
 
 pub fn resolve_action_cwd(raw: Option<&str>, fallback: &Path) -> PathBuf {
@@ -29,11 +34,14 @@ pub fn resolve_action_cwd(raw: Option<&str>, fallback: &Path) -> PathBuf {
 }
 
 pub fn resolve_journal_context(cwd: &Path) -> Result<JournalContext> {
-    let repo_root = resolve_repo_root(cwd)?;
+    let roots = resolve_roots(cwd)?;
     Ok(JournalContext {
-        journal_dir: repo_root.join(".journal"),
-        repo_root,
+        journal_dir: roots.journal_root.join(".journal"),
+        repo_root: roots.journal_root,
+        active_root: roots.active_root,
+        worktree_roots: roots.worktree_roots,
         cwd: cwd.to_path_buf(),
+        treehouse_version: treehouse_version(),
     })
 }
 

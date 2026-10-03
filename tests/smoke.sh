@@ -5,6 +5,11 @@ set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 bin="$root/bin/repo-journal"
 
+command -v treehouse >/dev/null || {
+  echo "FAIL: treehouse is required on PATH (see README)" >&2
+  exit 1
+}
+
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 cd "$tmp"
@@ -29,6 +34,10 @@ grep -q "repro'd at 40 concurrent logins" "$file" || { echo "FAIL: add did not a
 
 "$bin" list --plain | grep -q "auth-timeout" || { echo "FAIL: list from subdir found nothing" >&2; exit 1; }
 "$bin" complete slugs | grep -qx "auth-timeout" || { echo "FAIL: complete slugs missing auth-timeout" >&2; exit 1; }
+
+echo "artifact" > "$repo_root/fixture.txt"
+"$bin" attach auth-timeout "$repo_root/fixture.txt" --plain | grep -q '.journal/' || { echo "FAIL: attach did not return journal path" >&2; exit 1; }
+"$bin" files auth-timeout --plain | grep -q 'fixture.txt' || { echo "FAIL: files missing attachment" >&2; exit 1; }
 "$bin" list -a --plain | grep -q "auth-timeout" || { echo "FAIL: list -a compatibility failed" >&2; exit 1; }
 "$bin" show auth-timeout --plain | grep -q "repro'd at 40 concurrent logins" || { echo "FAIL: show from subdir missing content" >&2; exit 1; }
 

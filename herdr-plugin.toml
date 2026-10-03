@@ -1,8 +1,8 @@
 id = "dev.ariel.repo-journal"
 name = "Repo Journal"
-version = "0.4.3"
+version = "0.7.0"
 min_herdr_version = "0.9.3"
-description = "Git-root .journal/ CLI for investigations (human output by default; gitignored scratch)."
+description = "Git-root .journal/ CLI (requires Treehouse). Human output; gitignored scratch on main checkout."
 platforms = ["macos", "linux"]
 
 [[build]]

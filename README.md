@@ -13,8 +13,23 @@ repo-journal new auth-timeout "Why login times out" --plain
 repo-journal add auth-timeout "repro at 40 logins"
 repo-journal list
 repo-journal show auth-timeout --full
+repo-journal attach auth-timeout logs/error.txt
+repo-journal files auth-timeout
 repo-journal doctor
 ```
+
+Each entry is a markdown file plus an optional **bundle directory** with the same basename (for example `.journal/2026-10-03-auth-timeout/` next to `2026-10-03-auth-timeout.md`). `attach` **copies** files or folders from inside the git repository into that bundle and logs a bullet in the entry. Paths outside the repo or under `.journal/` are rejected.
+
+### Requires [Treehouse](https://github.com/kunchenguid/treehouse)
+
+Repo Journal is a thin journal layer on top of Treehouse. It does **not** implement worktree pooling: every command expects `treehouse` on `PATH`. Workspace roots and pool status come from Treehouse; this tool only writes `.journal/`, attachments, and gitignore policy on the **main checkout** while you or agents work in pool slots.
+
+```sh
+curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh
+repo-journal engine    # treehouse version, active vs journal root, pool summary
+```
+
+Do **not** add `.journal/` to `.worktreeinclude` — the journal stays on the main tree only.
 
 Rust implementation. Optional [TOON](https://github.com/toon-format/toon) via `--toon` (`serde_toon_format`). No Node runtime.
 

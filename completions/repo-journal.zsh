@@ -14,7 +14,10 @@ _repo_journal_options() {
   local cmd=$1
   case $cmd in
     show)
-      _values 'option' --plain --json --toon --full -h --help -v --version
+      _values 'option' --plain --json --toon --full --with-files -h --help -v --version
+      ;;
+    attach)
+      _values 'option' --plain --json --toon --as -h --help -v --version
       ;;
     list)
       _values 'option' --plain --json --toon --all -a -h --help -v --version
@@ -42,12 +45,12 @@ _repo_journal() {
 
   if (( CURRENT == 2 )); then
     _values 'command' \
-      dashboard new add list show path root doctor ensure-gitignore complete
+      dashboard new add attach files list show path root doctor ensure-gitignore complete
     return
   fi
 
   case $cmd in
-    show|add)
+    show|add|attach|files)
       if (( CURRENT == cmd_idx + 1 )); then
         _repo_journal_slugs
       fi

@@ -4,11 +4,16 @@ use serde_json::{json, Value};
 
 use crate::context::{journal_context_from_env, JournalContext};
 use crate::error::{CliError, Result};
-use crate::git::{git_status, list_tracked_journal_files};
+use crate::git::list_tracked_journal_files;
 use crate::gitignore::{ensure_journal_gitignore, journal_ignored_in_gitignore};
+use std::path::Path;
+
+use crate::artifacts::{self, artifact_dir_for_entry, cmd_attach, list_artifact_paths};
+use crate::engine::{git_status_for_journal, pool_status, summarize_pool};
+use crate::ENGINE;
 use crate::journal::{
     cmd_add, cmd_new, ensure_journal_dir, latest_for_slug, list_entries, read_entry_content,
-    require_slug,
+    require_slug, JournalEntryMeta,
 };
 use crate::human::{self, Style};
 use crate::output::{emit, home_header, rel_path, with_help};
@@ -60,6 +65,32 @@ fn parse_global_flags(args: &[String]) -> GlobalFlags {
         json,
         toon,
     }
+}
+
+fn enrich_attachments(entries: &mut [JournalEntryMeta]) {
+    for entry in entries.iter_mut() {
+        entry.attachments =
+            artifacts::artifact_count_for_entry(Path::new(&entry.path)).unwrap_or(0);
+    }
+}
+
+fn take_option(stripped: &[String], name: &str) -> (Vec<String>, Option<String>) {
+    let mut out = Vec::new();
+    let mut value = None;
+    let mut i = 0;
+    while i < stripped.len() {
+        if stripped[i] == name {
+            if i + 1 >= stripped.len() {
+                break;
+            }
+            value = Some(stripped[i + 1].clone());
+            i += 2;
+            continue;
+        }
+        out.push(stripped[i].clone());
+        i += 1;
+    }
+    (out, value)
 }
 
 fn take_flag(stripped: &[String], name: &str) -> (Vec<String>, bool) {
@@ -152,6 +183,9 @@ pub fn run(args: Vec<String>) -> Result<()> {
         "root" => cmd_root(&rest, &ctx),
         "doctor" => cmd_doctor(&rest, &ctx),
         "ensure-gitignore" => cmd_ensure_gitignore(&rest, &ctx),
+        "attach" => cmd_attach_handler(&rest, &ctx),
+        "files" => cmd_files_handler(&rest, &ctx),
+        "engine" => cmd_engine(&rest, &ctx),
         other => {
             let err = CliError::new(
                 "VALIDATION_ERROR",
@@ -220,10 +254,13 @@ fn cmd_dashboard(args: &[String], ctx: &JournalContext) -> Result<()> {
     let flags = parse_global_flags(args);
     unexpected_args(&flags.stripped)?;
 
-    let git = git_status(&ctx.repo_root);
+    let git = git_status_for_journal(&ctx.repo_root);
+    let pool_json = pool_status(&ctx.cwd)?;
+    let pool = summarize_pool(&pool_json);
     let tracked = list_tracked_journal_files(&ctx.repo_root);
     let gitignore_ok = journal_ignored_in_gitignore(&ctx.repo_root)?;
-    let entries = list_entries(&ctx.journal_dir)?;
+    let mut entries = list_entries(&ctx.journal_dir)?;
+    enrich_attachments(&mut entries);
     let recent: Vec<_> = entries.iter().take(DEFAULT_LIST).cloned().collect();
 
     if flags.plain {
@@ -233,10 +270,13 @@ fn cmd_dashboard(args: &[String], ctx: &JournalContext) -> Result<()> {
     let mode = flags.output_mode();
     let human = human::format_dashboard(
         &Style::detect(),
+        ctx.treehouse_version.as_deref(),
+        &ctx.active_root,
         &ctx.repo_root,
         &ctx.journal_dir,
         &git,
         gitignore_ok,
+        &pool,
         &entries,
         &recent,
         should_ensure_gitignore(),
@@ -253,9 +293,13 @@ fn cmd_dashboard(args: &[String], ctx: &JournalContext) -> Result<()> {
     let help: Vec<&str> = help_strings.iter().map(String::as_str).collect();
 
     let mut body = home_header(crate::DESCRIPTION);
+    body.insert("engine".into(), json!(ENGINE));
+    body.insert("treehouse_version".into(), json!(ctx.treehouse_version));
+    body.insert("active_root".into(), json!(ctx.active_root));
     body.insert("repo_root".into(), json!(ctx.repo_root));
     body.insert("journal_dir".into(), json!(ctx.journal_dir));
     body.insert("git".into(), json!(git));
+    body.insert("treehouse_pool".into(), json!(pool));
     body.insert(
         "policy".into(),
         json!({
@@ -276,7 +320,7 @@ fn cmd_dashboard(args: &[String], ctx: &JournalContext) -> Result<()> {
         "entries_recent".into(),
         json!(recent
             .iter()
-            .map(|e| json!({"slug": e.slug, "date": e.date, "title": e.title}))
+            .map(|e| json!({"slug": e.slug, "date": e.date, "title": e.title, "attachments": e.attachments}))
             .collect::<Vec<_>>()),
     );
     let body = with_help(body, help);
@@ -380,7 +424,8 @@ fn cmd_list(args: &[String], ctx: &JournalContext) -> Result<()> {
     unexpected_args(&stripped)?;
     let all = all_long || all_short;
 
-    let entries = list_entries(&ctx.journal_dir)?;
+    let mut entries = list_entries(&ctx.journal_dir)?;
+    enrich_attachments(&mut entries);
     let shown: Vec<_> = if all {
         entries.clone()
     } else {
@@ -418,7 +463,7 @@ fn cmd_list(args: &[String], ctx: &JournalContext) -> Result<()> {
                     "entries".into(),
                     json!(shown
                         .iter()
-                        .map(|e| json!({"slug": e.slug, "date": e.date, "title": e.title}))
+                        .map(|e| json!({"slug": e.slug, "date": e.date, "title": e.title, "attachments": e.attachments}))
                         .collect::<Vec<_>>()),
                 ),
                 (
@@ -440,7 +485,8 @@ fn cmd_list(args: &[String], ctx: &JournalContext) -> Result<()> {
 
 fn cmd_show(args: &[String], ctx: &JournalContext) -> Result<()> {
     let flags = parse_global_flags(args);
-    let (stripped, full) = take_flag(&flags.stripped, "--full");
+    let (after_full, full) = take_flag(&flags.stripped, "--full");
+    let (stripped, with_files) = take_flag(&after_full, "--with-files");
     if stripped.len() != 1 {
         return Err(
             CliError::new("VALIDATION_ERROR", "show requires exactly one slug").with_suggestions(
@@ -464,30 +510,171 @@ fn cmd_show(args: &[String], ctx: &JournalContext) -> Result<()> {
         ])
     })?;
 
+    let artifact_paths = list_artifact_paths(&artifact_dir_for_entry(&file))?;
     let (content, truncated) = read_entry_content(&file, full || flags.plain)?;
     if flags.plain {
+        if with_files && !artifact_paths.is_empty() {
+            let mut out = content;
+            if !out.ends_with('\n') {
+                out.push('\n');
+            }
+            out.push_str("\n## Attachments\n");
+            for p in &artifact_paths {
+                out.push_str(p);
+                out.push('\n');
+            }
+            return print_out(&out);
+        }
         return print_out(&content);
     }
 
     let rel = rel_path(&ctx.repo_root, &file);
-    let human = human::format_show(&slug, &rel, &content, truncated);
+    let files_for_display = if with_files {
+        artifact_paths.clone()
+    } else {
+        Vec::new()
+    };
+    let human = human::format_show(&slug, &rel, &content, truncated, &files_for_display);
     let mode = flags.output_mode();
 
-    let help_string = format!("repo-journal show {slug} --full");
-    let help: Vec<&str> = if truncated {
-        vec![help_string.as_str()]
-    } else {
-        vec![]
-    };
+    let mut help = Vec::new();
+    if truncated {
+        help.push(format!("repo-journal show {slug} --full"));
+    }
+    if with_files && artifact_paths.is_empty() {
+        help.push(format!("repo-journal attach {slug} <path>"));
+    }
+    let help_refs: Vec<&str> = help.iter().map(String::as_str).collect();
+
     let body = BTreeMap::from([
         ("slug".into(), json!(slug)),
         ("path".into(), json!(rel)),
         ("truncated".into(), json!(truncated)),
+        ("attachments".into(), json!(artifact_paths)),
         ("content".into(), json!(content)),
     ]);
-    let body = with_help(body, help);
+    let body = with_help(body, help_refs);
     let value = Value::Object(body.into_iter().collect());
     print_value(&value, mode, &human)?;
+    Ok(())
+}
+
+fn cmd_attach_handler(args: &[String], ctx: &JournalContext) -> Result<()> {
+    let flags = parse_global_flags(args);
+    let (stripped, as_name) = take_option(&flags.stripped, "--as");
+    if stripped.len() < 2 {
+        return Err(
+            CliError::new("VALIDATION_ERROR", "attach requires a slug and at least one path")
+                .with_suggestions(vec![
+                    "repo-journal attach auth-timeout logs/error.txt",
+                    "repo-journal attach auth-timeout repro/ --as repro",
+                ]),
+        );
+    }
+    let slug_raw = &stripped[0];
+    require_slug(slug_raw)?;
+    let sources: Vec<String> = stripped[1..].to_vec();
+    ensure_policy(ctx)?;
+    let (entry_md, slug, attached) = cmd_attach(
+        &ctx.journal_dir,
+        &ctx.repo_root,
+        &ctx.worktree_roots,
+        &ctx.cwd,
+        slug_raw,
+        &sources,
+        as_name.as_deref(),
+    )?;
+
+    if flags.plain {
+        for item in &attached {
+            print_out(&format!("{}\n", item.dest))?;
+        }
+        return Ok(());
+    }
+
+    let rel_entry = rel_path(&ctx.repo_root, &entry_md);
+    let human = human::format_attach(&rel_entry, &slug, &attached);
+    let mode = flags.output_mode();
+    let body = BTreeMap::from([
+        (
+            "ok".into(),
+            json!({
+                "op": "attach",
+                "slug": slug,
+                "entry": rel_entry,
+                "attached": attached,
+            }),
+        ),
+    ]);
+    let value = Value::Object(body.into_iter().collect());
+    print_value(&value, mode, &human)?;
+    Ok(())
+}
+
+fn cmd_files_handler(args: &[String], ctx: &JournalContext) -> Result<()> {
+    let flags = parse_global_flags(args);
+    if flags.stripped.len() != 1 {
+        return Err(
+            CliError::new("VALIDATION_ERROR", "files requires exactly one slug").with_suggestions(
+                vec!["repo-journal files auth-timeout"],
+            ),
+        );
+    }
+    let slug = require_slug(&flags.stripped[0])?;
+    let entry_md = latest_for_slug(&ctx.journal_dir, &slug)?.ok_or_else(|| {
+        CliError::new(
+            "NOT_FOUND",
+            format!("no entry matching '{}'", flags.stripped[0]),
+        )
+        .with_suggestions(vec![
+            "repo-journal list",
+            &format!("repo-journal new {} \"<title>\"", flags.stripped[0]),
+        ])
+    })?;
+    let bundle = artifact_dir_for_entry(&entry_md);
+    let rel_bundle = rel_path(&ctx.repo_root, &bundle);
+    let paths = list_artifact_paths(&bundle)?;
+
+    if flags.plain {
+        for p in &paths {
+            let full = bundle.join(p);
+            print_out(&format!("{}\n", rel_path(&ctx.repo_root, &full)))?;
+        }
+        return Ok(());
+    }
+
+    let human = human::format_files(&slug, &rel_bundle, &paths);
+    let body = json!({
+        "slug": slug,
+        "bundle_dir": rel_bundle,
+        "files": paths,
+    });
+    print_value(&body, flags.output_mode(), &human)?;
+    Ok(())
+}
+
+fn cmd_engine(args: &[String], ctx: &JournalContext) -> Result<()> {
+    let flags = parse_global_flags(args);
+    unexpected_args(&flags.stripped)?;
+    if flags.plain {
+        return print_out(&format!("{ENGINE}\n"));
+    }
+    let pool = summarize_pool(&pool_status(&ctx.cwd)?);
+    let body = json!({
+        "engine": ENGINE,
+        "treehouse_version": ctx.treehouse_version,
+        "active_root": ctx.active_root,
+        "journal_root": ctx.repo_root,
+        "journal_dir": ctx.journal_dir,
+        "treehouse_pool": pool,
+    });
+    let human = human::format_engine(
+        ctx.treehouse_version.as_deref(),
+        &ctx.active_root,
+        &ctx.repo_root,
+        &pool,
+    );
+    print_value(&body, flags.output_mode(), &human)?;
     Ok(())
 }
 
@@ -521,7 +708,7 @@ fn cmd_doctor(args: &[String], ctx: &JournalContext) -> Result<()> {
     let flags = parse_global_flags(args);
     unexpected_args(&flags.stripped)?;
 
-    let git = git_status(&ctx.repo_root);
+    let git = git_status_for_journal(&ctx.repo_root);
     let tracked = list_tracked_journal_files(&ctx.repo_root);
     let gitignore_ok = journal_ignored_in_gitignore(&ctx.repo_root)?;
     let mut issues = Vec::new();
@@ -531,7 +718,6 @@ fn cmd_doctor(args: &[String], ctx: &JournalContext) -> Result<()> {
     if !tracked.is_empty() {
         issues.push("journal_tracked_in_git");
     }
-
     if flags.plain {
         let text = if issues.is_empty() {
             "ok".to_string()

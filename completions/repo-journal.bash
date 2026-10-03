@@ -18,12 +18,15 @@ _repo_journal() {
   done
 
   local global_opts="--plain --json --toon -h --help -v --version"
-  local commands="dashboard new add list show path root doctor ensure-gitignore complete"
+  local commands="dashboard new add attach files list show path root doctor ensure-gitignore complete"
 
   if [[ $cur == -* ]]; then
     case $cmd in
       show)
-        COMPREPLY=( $(compgen -W "$global_opts --full" -- "$cur") )
+        COMPREPLY=( $(compgen -W "$global_opts --full --with-files" -- "$cur") )
+        ;;
+      attach)
+        COMPREPLY=( $(compgen -W "$global_opts --as" -- "$cur") )
         ;;
       list)
         COMPREPLY=( $(compgen -W "$global_opts --all -a" -- "$cur") )
@@ -44,7 +47,7 @@ _repo_journal() {
   fi
 
   case $cmd in
-    show|add)
+    show|add|attach|files)
       if [[ $prev == "$cmd" ]]; then
         local slugs
         slugs=$(_repo_journal_slugs)

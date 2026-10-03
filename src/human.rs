@@ -1,9 +1,11 @@
 use std::io::IsTerminal;
 use std::path::Path;
 
+use crate::engine::PoolSummary;
 use crate::git::GitStatus;
 use crate::journal::JournalEntryMeta;
 use crate::output::collapse_home;
+use crate::ENGINE;
 use crate::VERSION;
 
 pub struct Style {
@@ -53,6 +55,8 @@ pub fn format_help() -> String {
   dashboard              Repo summary and recent entries (default)
   new <slug> [title...]  Create or reuse today's entry for slug
   add <slug> <note...>   Append a finding to an entry
+  attach <slug> <path…>  Copy repo files or folders into the entry bundle
+  files <slug>           List attached artifact paths
   list                   List recent entries
   show <slug>            Show entry contents
   path                   Print .journal directory path
@@ -60,6 +64,7 @@ pub fn format_help() -> String {
   doctor                 Check gitignore and git policy
   ensure-gitignore       Append /.journal/ to .gitignore
   complete slugs         Slug list for shell tab completion
+  engine                 Show workspace engine and roots
 
 {}
   --plain    Scripting: paths or raw text only
@@ -74,7 +79,11 @@ pub fn format_help() -> String {
   repo-journal add auth-timeout "repro at 40 logins"
   repo-journal list
   repo-journal show auth-timeout --full
+  repo-journal attach auth-timeout logs/error.txt
+  repo-journal files auth-timeout
   repo-journal doctor
+
+Requires [Treehouse](https://github.com/kunchenguid/treehouse) on PATH. Journal lives on the main checkout; pool status from `treehouse status --json`.
 
 Shell
   source completions/repo-journal.zsh   # zsh (also via plugin shell.zsh)
@@ -94,26 +103,55 @@ fn display_path(path: &Path) -> String {
 
 pub fn format_dashboard(
     style: &Style,
-    repo_root: &Path,
+    treehouse_version: Option<&str>,
+    active_root: &Path,
+    journal_root: &Path,
     journal_dir: &Path,
     git: &GitStatus,
     gitignore_ok: bool,
+    pool: &PoolSummary,
     entries: &[JournalEntryMeta],
     recent: &[JournalEntryMeta],
     ensure_gitignore: bool,
 ) -> String {
     let mut out = String::new();
     out.push_str(&format!("{} {}\n\n", style.bold("Repo Journal"), VERSION));
+    let engine_line = match treehouse_version {
+        Some(v) => format!("{ENGINE} {v}"),
+        None => ENGINE.to_string(),
+    };
     out.push_str(&format!(
         "  {:<10} {}\n",
-        style.dim("Repository"),
-        display_path(repo_root)
+        style.dim("Engine"),
+        engine_line
+    ));
+    if active_root != journal_root {
+        out.push_str(&format!(
+            "  {:<10} {}\n",
+            style.dim("Active"),
+            display_path(active_root)
+        ));
+    }
+    out.push_str(&format!(
+        "  {:<10} {}\n",
+        style.dim("Journal root"),
+        display_path(journal_root)
     ));
     out.push_str(&format!(
         "  {:<10} {}\n\n",
         style.dim("Journal"),
         display_path(journal_dir)
     ));
+    if pool.slots > 0 {
+        out.push_str(&format!(
+            "  {:<10} {} slots ({} available, {} leased, {} in-use)\n\n",
+            style.dim("Pool"),
+            pool.slots,
+            pool.available,
+            pool.leased,
+            pool.in_use
+        ));
+    }
 
     let dirty = if git.dirty { "dirty" } else { "clean" };
     let ignore = if gitignore_ok { "ok" } else { "missing" };
@@ -150,11 +188,14 @@ pub fn format_dashboard(
         style.dim("TITLE")
     ));
     for e in recent {
-        let title = if e.title.len() > 48 {
-            format!("{}…", &e.title[..47])
+        let mut title = if e.title.len() > 40 {
+            format!("{}…", &e.title[..39])
         } else {
             e.title.clone()
         };
+        if e.attachments > 0 {
+            title.push_str(&format!(" (+{} files)", e.attachments));
+        }
         out.push_str(&format!("  {:<22} {:<12} {}\n", e.slug, e.date, title));
     }
     if entries.len() > recent.len() {
@@ -189,7 +230,12 @@ pub fn format_list(entries: &[JournalEntryMeta], truncated: bool) -> String {
         style.dim("TITLE")
     ));
     for e in entries {
-        out.push_str(&format!("  {:<22} {:<12} {}\n", e.slug, e.date, e.title));
+        let title = if e.attachments > 0 {
+            format!("{} (+{} files)", e.title, e.attachments)
+        } else {
+            e.title.clone()
+        };
+        out.push_str(&format!("  {:<22} {:<12} {}\n", e.slug, e.date, title));
     }
     if truncated {
         out.push_str(&format!(
@@ -216,7 +262,7 @@ pub fn format_new(
     out.push_str(&format!(
         "\n  {}\n  {}\n",
         style.dim(&format!("Next: repo-journal add {slug} \"<finding>\"")),
-        style.dim(&format!("      repo-journal show {slug}")),
+        style.dim(&format!("      repo-journal attach {slug} <path>")),
     ));
     out
 }
@@ -231,7 +277,13 @@ pub fn format_add(path: &str, slug: &str) -> String {
     )
 }
 
-pub fn format_show(slug: &str, path: &str, content: &str, truncated: bool) -> String {
+pub fn format_show(
+    slug: &str,
+    path: &str,
+    content: &str,
+    truncated: bool,
+    attachments: &[String],
+) -> String {
     let style = Style::detect();
     let mut out = format!("{}  {}\n", style.bold(slug), style.dim(path));
     out.push_str(&format!("{}\n\n", "─".repeat(40)));
@@ -239,11 +291,52 @@ pub fn format_show(slug: &str, path: &str, content: &str, truncated: bool) -> St
     if !content.ends_with('\n') {
         out.push('\n');
     }
+    if !attachments.is_empty() {
+        out.push_str(&format!("\n{}\n", style.bold("Attachments")));
+        for file in attachments {
+            out.push_str(&format!("  {file}\n"));
+        }
+    }
     if truncated {
         out.push_str(&format!(
             "\n{}\n",
             style.dim("… truncated; use --full for entire entry")
         ));
+    }
+    out
+}
+
+pub fn format_attach(entry: &str, slug: &str, attached: &[crate::artifacts::AttachedItem]) -> String {
+    let style = Style::detect();
+    let mut out = format!(
+        "{}\n  entry: {}\n  slug:  {}\n",
+        style.green("✓ Attached"),
+        entry,
+        slug
+    );
+    for item in attached {
+        out.push_str(&format!("  {} → {}\n", item.source, item.dest));
+    }
+    out.push_str(&format!(
+        "\n  {}\n",
+        style.dim(&format!("Try: repo-journal files {slug}"))
+    ));
+    out
+}
+
+pub fn format_files(slug: &str, bundle: &str, paths: &[String]) -> String {
+    let style = Style::detect();
+    if paths.is_empty() {
+        return format!(
+            "{}\n  bundle: {}\n\n  {}\n",
+            style.bold(&format!("Files for {slug}")),
+            bundle,
+            style.dim("No attachments yet. Use: repo-journal attach <slug> <path>")
+        );
+    }
+    let mut out = format!("{}\n  bundle: {}\n", style.bold(&format!("Files for {slug}")), bundle);
+    for path in paths {
+        out.push_str(&format!("  {path}\n"));
     }
     out
 }
@@ -298,4 +391,35 @@ pub fn format_simple_ok(message: &str) -> String {
 
 pub fn format_path_label(label: &str, path: &Path) -> String {
     format!("{label}: {}\n", display_path(path))
+}
+
+pub fn format_engine(
+    treehouse_version: Option<&str>,
+    active_root: &Path,
+    journal_root: &Path,
+    pool: &PoolSummary,
+) -> String {
+    let style = Style::detect();
+    let mut out = format!("{}\n", style.bold("Repo Journal engine"));
+    out.push_str(&format!(
+        "  engine:       {}\n",
+        treehouse_version
+            .map(|v| format!("{ENGINE} {v}"))
+            .unwrap_or_else(|| ENGINE.to_string())
+    ));
+    out.push_str(&format!(
+        "  active root:  {}\n",
+        display_path(active_root)
+    ));
+    out.push_str(&format!(
+        "  journal root: {}\n",
+        display_path(journal_root)
+    ));
+    if pool.slots > 0 {
+        out.push_str(&format!(
+            "  pool:         {} slots ({} available, {} leased, {} in-use)\n",
+            pool.slots, pool.available, pool.leased, pool.in_use
+        ));
+    }
+    out
 }

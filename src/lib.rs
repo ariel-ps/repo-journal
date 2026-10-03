@@ -1,5 +1,7 @@
+mod artifacts;
 mod cli;
 mod context;
+mod engine;
 mod error;
 mod git;
 mod gitignore;
@@ -7,12 +9,13 @@ mod human;
 mod journal;
 mod output;
 
+pub use engine::ENGINE;
 pub use error::CliError;
 pub use journal::{cmd_add, cmd_new, ensure_journal_dir, list_entries, slugify, today_iso};
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const DESCRIPTION: &str =
-    "Git-root .journal/ scratch for agent investigations. Human-readable by default; --json, --toon, or --plain for machines.";
+    "Git-root .journal/ scratch for investigations (requires Treehouse). Journal on main checkout; human output by default.";
 
 pub fn run(args: Vec<String>) -> Result<(), CliError> {
     cli::run(args)
