@@ -1,0 +1,59 @@
+README.md
+  37cdea2bc419c064 19,31,36-37,39,45-49
+herdr-plugin.toml
+  37cdea2bc419c064 3
+Cargo.lock
+  37cdea2bc419c064 1-578
+Cargo.toml
+  37cdea2bc419c064 1-20
+src/lib.rs
+  37cdea2bc419c064 1-18
+src/cli.rs
+  37cdea2bc419c064 1-513
+bin/repo-journal
+  37cdea2bc419c064 5,7-8,12
+scripts/build/install.sh
+  37cdea2bc419c064 6-7,11-15
+src/error.rs
+  37cdea2bc419c064 1-51
+tests/test_manifest.py
+  37cdea2bc419c064 14
+src/context.rs
+  37cdea2bc419c064 1-51
+src/gitignore.rs
+  37cdea2bc419c064 1-146
+CHANGELOG.md
+  37cdea2bc419c064 3-7
+src/main.rs
+  37cdea2bc419c064 1-6
+src/git.rs
+  37cdea2bc419c064 1-69
+src/journal.rs
+  37cdea2bc419c064 1-360
+src/output.rs
+  37cdea2bc419c064 1-63
+tests/smoke.sh
+  37cdea2bc419c064 62,64,66-67,69
+.gitignore
+  37cdea2bc419c064 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "2.0.0",
+  "base_commit_sha": "b28795041690da8d78f53ea41754075fe9016699",
+  "prompts": {
+    "37cdea2bc419c064": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "63760873-492d-4aea-9e9f-c9a70eaefd5c",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "ariel-ps <ariel@prompt.security>",
+      "messages": [],
+      "total_additions": 2727,
+      "total_deletions": 9120,
+      "accepted_lines": 1909,
+      "overriden_lines": 0
+    }
+  }
+}
