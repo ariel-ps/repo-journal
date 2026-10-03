@@ -1,11 +1,11 @@
 # Repo Journal
 
-AXI-style CLI for **git-root** investigation scratch files in `.journal/`, plus a bundled agent skill.
+CLI for **git-root** investigation scratch files in `.journal/`, plus a bundled agent skill.
 
 - Requires a **git work tree** (`git rev-parse --show-toplevel`).
 - Writes only under **`<repo>/.journal/`** (works from any subdirectory).
 - Appends **`.journal/`** to `.gitignore` by default (`REPO_JOURNAL_ENSURE_GITIGNORE=0` to disable).
-- **TOON** output by default; **`--plain`** for scripts; **`--json`** for machines.
+- **Human-readable** tables and messages in the terminal; **`--plain`** for scripts; **`--json`** or **`--toon`** for agents.
 
 ```sh
 repo-journal                                    # dashboard
@@ -16,7 +16,7 @@ repo-journal show auth-timeout --full
 repo-journal doctor
 ```
 
-Rust implementation with [TOON](https://github.com/toon-format/toon) via `serde_toon_format`. No Node runtime.
+Rust implementation. Optional [TOON](https://github.com/toon-format/toon) via `--toon` (`serde_toon_format`). No Node runtime.
 
 ## Install
 
@@ -44,7 +44,7 @@ python3 tests/test_manifest.py
 
 - `src/` — Rust CLI and library.
 - `bin/repo-journal` — shell launcher on `PATH`.
-- `libexec/repo-journal` — release binary (committed for Node-free install).
+- `libexec/repo-journal` — release binary (built locally; gitignored).
 - `skills/repo-journal/` — agent skill.
 - `tests/` — smoke and manifest contract tests.
 

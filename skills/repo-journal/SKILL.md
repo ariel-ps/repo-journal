@@ -6,7 +6,7 @@ user-invocable: false
 
 # repo-journal
 
-Scratch investigations live at **`<git-root>/.journal/`** only (not subfolders). The CLI requires a git work tree, keeps `.journal/` gitignored by default, and speaks **TOON** unless you pass `--plain` or `--json`.
+Scratch investigations live at **`<git-root>/.journal/`** only (not subfolders). The CLI requires a git work tree, keeps `.journal/` gitignored by default, and prints **human-readable** output in the terminal. Use **`--plain`** or **`--json`** for scripts; **`--toon`** when you need compact structured output for agents.
 
 Get commands and flags from the live CLI (source of truth):
 
@@ -26,4 +26,4 @@ Run via the plugin on `PATH`, or `<plugin-root>/libexec/repo-journal`.
 
 ## Scripting
 
-Use `--plain` for paths and raw `show` text (smoke tests and shell scripts).
+Use `--plain` for paths and raw `show` text (smoke tests and shell scripts). Use `--toon` only when integrating with TOON-aware tooling.
