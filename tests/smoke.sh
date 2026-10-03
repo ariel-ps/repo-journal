@@ -40,6 +40,8 @@ echo "artifact" > "$repo_root/fixture.txt"
 "$bin" files auth-timeout --plain | grep -q 'fixture.txt' || { echo "FAIL: files missing attachment" >&2; exit 1; }
 "$bin" list -a --plain | grep -q "auth-timeout" || { echo "FAIL: list -a compatibility failed" >&2; exit 1; }
 "$bin" show auth-timeout --plain | grep -q "repro'd at 40 concurrent logins" || { echo "FAIL: show from subdir missing content" >&2; exit 1; }
+"$bin" show auth-timeout --context --plain | grep -q 'journal-repo-context: 1' || { echo "FAIL: show --context missing header" >&2; exit 1; }
+"$bin" show auth-timeout --context --plain | grep -q "repro'd at 40 concurrent logins" || { echo "FAIL: show --context missing body" >&2; exit 1; }
 
 "$bin" doctor --plain | grep -q '^ok$' || { echo "FAIL: doctor not ok" >&2; exit 1; }
 [ "$("$bin" --plain)" = "$repo_root/.journal" ] || { echo "FAIL: dashboard --plain failed" >&2; exit 1; }

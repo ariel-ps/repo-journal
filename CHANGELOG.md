@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.3
+
+- `journal-repo show <slug> --context` — one handoff block (roots, entry, bundle, attachments, full markdown) for agents; use with `--plain` or `--json`.
+- Skill: **Resume / handoff** section documents load-via-CLI workflow from Treehouse slots.
+
 ## 0.8.2
 
 - Removed deprecated `engine` command, `REPO_JOURNAL_*` env vars, and `REPO_JOURNAL_CLI` shell export.

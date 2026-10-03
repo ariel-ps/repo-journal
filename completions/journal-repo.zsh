@@ -14,7 +14,7 @@ _journal_repo_options() {
   local cmd=$1
   case $cmd in
     show)
-      _values 'option' --plain --json --toon --full --with-files -h --help -v --version
+      _values 'option' --plain --json --toon --full --with-files --context -h --help -v --version
       ;;
     attach)
       _values 'option' --plain --json --toon --as -h --help -v --version

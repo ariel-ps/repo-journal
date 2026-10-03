@@ -1,32 +1,54 @@
 ---
 name: journal-repo
-description: Record investigation findings in this repo's git-root .journal/ folder using the journal-repo CLI. Use when asked to investigate, root-cause, audit, or "write to the journal".
+description: Record investigation findings in this repo's git-root .journal/ folder using the journal-repo CLI. Use when asked to investigate, root-cause, audit, resume prior work, or "write to the journal".
 user-invocable: false
 ---
 
 # journal-repo
 
-Scratch investigations live at **`<git-root>/.journal/`** only (not subfolders). The CLI requires a git work tree, keeps `.journal/` gitignored by default, and prints **human-readable** output in the terminal. Use **`--plain`** or **`--json`** for scripts; **`--toon`** when you need compact structured output for agents.
+Scratch investigations live at **`<git-root>/.journal/`** on the **main** checkout (not in Treehouse pool slots). The CLI works from any worktree cwd; it resolves the journal on main automatically. Requires **`treehouse`** on PATH.
 
-Get commands and flags from the live CLI (source of truth):
+Get commands from the live CLI:
 
-- `journal-repo` — dashboard (entries, git head, gitignore policy)
 - `journal-repo --help`
 - `journal-repo <command> --help`
 
-Run via the plugin on `PATH`, or `<plugin-root>/libexec/journal-repo`. Plugin `shell.zsh` / `shell.bash` enable tab completion (commands, flags, slugs via `complete slugs`).
+Run via Herdr plugin `PATH`, or `<plugin-root>/bin/journal-repo`.
 
-**Requires [Treehouse](https://github.com/kunchenguid/treehouse) on PATH** — the only worktree backend journal-repo supports. Run agents in Treehouse pool slots; log with `journal-repo` (journal always on the main checkout). Use `journal-repo treehouse` to inspect roots and pool status. Do not add `.journal/` to `.worktreeinclude`.
+## Resume / handoff (read before continuing work)
+
+When picking up an investigation—or starting a new turn on the same topic—load prior context through the **CLI**, not by guessing paths under the workspace (pool slots often have no `.journal/` in the file tree).
+
+1. List threads: `journal-repo list --plain` or `journal-repo complete slugs`
+2. Load everything for one slug (metadata + attachments + full markdown):
+
+   ```bash
+   journal-repo show <slug> --context --plain
+   ```
+
+   For structured tooling: `journal-repo show <slug> --context --json`
+
+3. Read attachment files using paths from the `attachments:` section (relative to **journal root** / main checkout).
+4. After work: `journal-repo add <slug> "…"` for breadcrumbs; edit the `.md` for long notes, URLs, and research; `journal-repo attach <slug> <repo-path…>` for evidence copies.
+
+Same slug across days appends to the latest matching entry; reuse the slug so findings stay one thread.
+
+## Write path
+
+- `journal-repo new <slug> "title"` — create or reuse today's entry
+- `journal-repo add <slug> "<finding>"` — append a timestamped bullet
+- `journal-repo attach <slug> <path…>` — copy repo files/folders into the entry bundle
+- `journal-repo files <slug>` — list attachment paths
+- `journal-repo treehouse` — active vs journal root, pool summary
 
 ## Rules
 
-- One **slug** per investigation; reuse it so `add` appends to the same thread.
-- `journal-repo new <slug> "title"` then edit the file for long write-ups; use `add` for one-line breadcrumbs.
-- `journal-repo attach <slug> <path…>` copies repo files or folders into the entry’s bundle directory (same basename as the `.md`, without extension). Use `files <slug>` or `show <slug> --with-files` to list them.
-- Never `git add .journal/` — the tool appends `.journal/` to `.gitignore` on `new`, `add`, and `path` unless `JOURNAL_REPO_ENSURE_GITIGNORE=0`; `doctor` reports policy drift without changing it.
-- If the CLI is unavailable, stop and report that journal writes cannot be
-  performed safely; do not bypass its repository and symlink checks.
+- Never `git add .journal/` — auto-gitignore unless `JOURNAL_REPO_ENSURE_GITIGNORE=0`
+- Do not bypass the CLI to write under `.journal/` (symlink and path checks exist for a reason)
+- If `journal-repo` is unavailable, stop and report that journal access failed
 
 ## Scripting
 
-Use `--plain` for paths and raw `show` text (smoke tests and shell scripts). Use `--toon` only when integrating with TOON-aware tooling.
+- **`--plain`** — paths, raw text, and `--context` handoff blocks
+- **`--json`** — machine-readable payloads
+- **`--toon`** — TOON for TOON-aware agents only

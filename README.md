@@ -12,7 +12,7 @@ journal-repo                                    # dashboard
 journal-repo new auth-timeout "Why login times out" --plain
 journal-repo add auth-timeout "repro at 40 logins"
 journal-repo list
-journal-repo show auth-timeout --full
+journal-repo show auth-timeout --context --plain   # agent handoff: metadata + attachments + full entry
 journal-repo attach auth-timeout logs/error.txt
 journal-repo files auth-timeout
 journal-repo doctor

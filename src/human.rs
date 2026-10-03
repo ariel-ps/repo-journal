@@ -57,7 +57,7 @@ pub fn format_help() -> String {
   attach <slug> <path…>  Copy repo files or folders into the entry bundle
   files <slug>           List attached artifact paths
   list                   List recent entries
-  show <slug>            Show entry contents
+  show <slug>            Show entry contents (--context for agent handoff)
   path                   Print .journal directory path
   root                   Print git repository root
   doctor                 Check gitignore and git policy
@@ -77,7 +77,7 @@ pub fn format_help() -> String {
   journal-repo new auth-timeout "Why login times out"
   journal-repo add auth-timeout "repro at 40 logins"
   journal-repo list
-  journal-repo show auth-timeout --full
+  journal-repo show auth-timeout --context --plain
   journal-repo attach auth-timeout logs/error.txt
   journal-repo files auth-timeout
   journal-repo doctor
@@ -304,6 +304,80 @@ pub fn format_show(
             "\n{}\n",
             style.dim("… truncated; use --full for entire entry")
         ));
+    }
+    out
+}
+
+/// Single plain-text block for agents: metadata, attachment paths, then full entry body.
+pub fn format_context_plain(
+    slug: &str,
+    journal_root: &Path,
+    active_root: &Path,
+    entry_rel: &str,
+    bundle_rel: &str,
+    attachments: &[String],
+    content: &str,
+) -> String {
+    let mut out = String::from("journal-repo-context: 1\n");
+    out.push_str(&format!("slug: {slug}\n"));
+    out.push_str(&format!("journal_root: {}\n", display_path(journal_root)));
+    if active_root != journal_root {
+        out.push_str(&format!("active_root: {}\n", display_path(active_root)));
+    }
+    out.push_str(&format!("entry: {entry_rel}\n"));
+    out.push_str(&format!("bundle: {bundle_rel}\n"));
+    out.push_str("attachments:\n");
+    if attachments.is_empty() {
+        out.push_str("  (none)\n");
+    } else {
+        for path in attachments {
+            out.push_str(&format!("  {path}\n"));
+        }
+    }
+    out.push_str("\n---\n\n");
+    out.push_str(content);
+    if !content.ends_with('\n') {
+        out.push('\n');
+    }
+    out
+}
+
+pub fn format_context_human(
+    slug: &str,
+    journal_root: &Path,
+    active_root: &Path,
+    entry_rel: &str,
+    bundle_rel: &str,
+    attachments: &[String],
+    content: &str,
+) -> String {
+    let style = Style::detect();
+    let mut out = format!("{}\n", style.bold("Investigation context"));
+    out.push_str(&format!("  slug:          {slug}\n"));
+    out.push_str(&format!(
+        "  journal root:  {}\n",
+        display_path(journal_root)
+    ));
+    if active_root != journal_root {
+        out.push_str(&format!(
+            "  active root:   {}\n",
+            display_path(active_root)
+        ));
+    }
+    out.push_str(&format!("  entry:         {entry_rel}\n"));
+    out.push_str(&format!("  bundle:        {bundle_rel}\n"));
+    if attachments.is_empty() {
+        out.push_str(&format!("  attachments:   {}\n", style.dim("(none)")));
+    } else {
+        out.push_str("  attachments:\n");
+        for path in attachments {
+            out.push_str(&format!("    {path}\n"));
+        }
+    }
+    out.push_str(&format!("\n{}\n", style.bold("Entry")));
+    out.push_str(content);
+    if !content.ends_with('\n') {
+        out.push('\n');
     }
     out
 }

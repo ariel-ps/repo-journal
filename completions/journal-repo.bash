@@ -23,7 +23,7 @@ _journal_repo() {
   if [[ $cur == -* ]]; then
     case $cmd in
       show)
-        COMPREPLY=( $(compgen -W "$global_opts --full --with-files" -- "$cur") )
+        COMPREPLY=( $(compgen -W "$global_opts --full --with-files --context" -- "$cur") )
         ;;
       list)
         COMPREPLY=( $(compgen -W "$global_opts --all -a" -- "$cur") )

@@ -485,8 +485,11 @@ fn cmd_list(args: &[String], ctx: &JournalContext) -> Result<()> {
 
 fn cmd_show(args: &[String], ctx: &JournalContext) -> Result<()> {
     let flags = parse_global_flags(args);
-    let (after_full, full) = take_flag(&flags.stripped, "--full");
+    let (after_context, context) = take_flag(&flags.stripped, "--context");
+    let (after_full, full) = take_flag(&after_context, "--full");
     let (stripped, with_files) = take_flag(&after_full, "--with-files");
+    let full = full || context;
+    let with_files = with_files || context;
     if stripped.len() != 1 {
         return Err(
             CliError::new("VALIDATION_ERROR", "show requires exactly one slug").with_suggestions(
@@ -510,8 +513,25 @@ fn cmd_show(args: &[String], ctx: &JournalContext) -> Result<()> {
         ])
     })?;
 
-    let artifact_paths = list_artifact_paths(&artifact_dir_for_entry(&file))?;
+    let bundle = artifact_dir_for_entry(&file);
+    let artifact_paths = list_artifact_paths(&bundle)?;
     let (content, truncated) = read_entry_content(&file, full || flags.plain)?;
+    let rel = rel_path(&ctx.repo_root, &file);
+    let bundle_rel = rel_path(&ctx.repo_root, &bundle);
+
+    if context && flags.plain {
+        let out = human::format_context_plain(
+            &slug,
+            &ctx.repo_root,
+            &ctx.active_root,
+            &rel,
+            &bundle_rel,
+            &artifact_paths,
+            &content,
+        );
+        return print_out(&out);
+    }
+
     if flags.plain {
         if with_files && !artifact_paths.is_empty() {
             let mut out = content;
@@ -528,31 +548,51 @@ fn cmd_show(args: &[String], ctx: &JournalContext) -> Result<()> {
         return print_out(&content);
     }
 
-    let rel = rel_path(&ctx.repo_root, &file);
     let files_for_display = if with_files {
         artifact_paths.clone()
     } else {
         Vec::new()
     };
-    let human = human::format_show(&slug, &rel, &content, truncated, &files_for_display);
+    let human = if context {
+        human::format_context_human(
+            &slug,
+            &ctx.repo_root,
+            &ctx.active_root,
+            &rel,
+            &bundle_rel,
+            &artifact_paths,
+            &content,
+        )
+    } else {
+        human::format_show(&slug, &rel, &content, truncated, &files_for_display)
+    };
     let mode = flags.output_mode();
 
     let mut help = Vec::new();
-    if truncated {
+    if truncated && !context {
         help.push(format!("journal-repo show {slug} --full"));
+    }
+    if context {
+        help.push(format!("journal-repo add {slug} \"<finding>\""));
     }
     if with_files && artifact_paths.is_empty() {
         help.push(format!("journal-repo attach {slug} <path>"));
     }
     let help_refs: Vec<&str> = help.iter().map(String::as_str).collect();
 
-    let body = BTreeMap::from([
+    let mut body = BTreeMap::from([
         ("slug".into(), json!(slug)),
         ("path".into(), json!(rel)),
-        ("truncated".into(), json!(truncated)),
+        ("truncated".into(), json!(truncated && !context)),
         ("attachments".into(), json!(artifact_paths)),
         ("content".into(), json!(content)),
     ]);
+    if context {
+        body.insert("context".into(), json!(true));
+        body.insert("journal_root".into(), json!(ctx.repo_root));
+        body.insert("active_root".into(), json!(ctx.active_root));
+        body.insert("bundle".into(), json!(bundle_rel));
+    }
     let body = with_help(body, help_refs);
     let value = Value::Object(body.into_iter().collect());
     print_value(&value, mode, &human)?;
