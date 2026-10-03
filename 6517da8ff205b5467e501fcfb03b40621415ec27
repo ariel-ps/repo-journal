@@ -1,0 +1,45 @@
+completions/repo-journal.bash
+  37cdea2bc419c064 1-66
+Cargo.toml
+  37cdea2bc419c064 3
+README.md
+  37cdea2bc419c064 33-45,61
+tests/test_manifest.py
+  37cdea2bc419c064 14
+shell.bash
+  37cdea2bc419c064 7-12
+src/cli.rs
+  37cdea2bc419c064 1,136-139,178-208
+src/human.rs
+  37cdea2bc419c064 62,78-81
+completions/repo-journal.zsh
+  37cdea2bc419c064 1-65
+tests/smoke.sh
+  37cdea2bc419c064 31
+skills/repo-journal/SKILL.md
+  37cdea2bc419c064 17
+herdr-plugin.toml
+  37cdea2bc419c064 3
+shell.zsh
+  37cdea2bc419c064 5-9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "2.0.0",
+  "base_commit_sha": "6517da8ff205b5467e501fcfb03b40621415ec27",
+  "prompts": {
+    "37cdea2bc419c064": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "63760873-492d-4aea-9e9f-c9a70eaefd5c",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "ariel-ps <ariel@prompt.security>",
+      "messages": [],
+      "total_additions": 316,
+      "total_deletions": 87,
+      "accepted_lines": 202,
+      "overriden_lines": 0
+    }
+  }
+}
