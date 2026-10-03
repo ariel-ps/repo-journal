@@ -3,8 +3,6 @@ typeset -g _JOURNAL_REPO_ROOT="${0:A:h}"
 typeset -U path
 path=("$_JOURNAL_REPO_ROOT/bin" $path)
 export JOURNAL_REPO_CLI="$_JOURNAL_REPO_ROOT/bin/journal-repo"
-# Deprecated alias for older shell snippets
-export REPO_JOURNAL_CLI="$JOURNAL_REPO_CLI"
 
 if ! command -v treehouse >/dev/null 2>&1; then
   echo "journal-repo: treehouse is required on PATH (https://github.com/kunchenguid/treehouse)" >&2

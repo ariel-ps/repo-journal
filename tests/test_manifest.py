@@ -11,7 +11,7 @@ class ManifestContractTests(unittest.TestCase):
         manifest = tomllib.loads((ROOT / "herdr-plugin.toml").read_text())
 
         self.assertEqual(manifest["id"], "dev.ariel.journal-repo")
-        self.assertEqual(manifest["version"], "0.8.1")
+        self.assertEqual(manifest["version"], "0.8.2")
         self.assertEqual(
             manifest["build"],
             [{"command": ["sh", "./scripts/build/install.sh"]}],

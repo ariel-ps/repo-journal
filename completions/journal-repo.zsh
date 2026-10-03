@@ -3,7 +3,7 @@
 
 _journal_repo_slugs() {
   local -a slugs
-  local bin="${JOURNAL_REPO_CLI:-${REPO_JOURNAL_CLI:-journal-repo}}"
+  local bin="${JOURNAL_REPO_CLI:-journal-repo}"
   slugs=("${(@f)$($=bin complete slugs 2>/dev/null)}")
   if (( ${#slugs} )); then
     _describe 'journal slug' slugs
@@ -45,7 +45,7 @@ _journal_repo() {
 
   if (( CURRENT == 2 )); then
     _values 'command' \
-      dashboard new add attach files list show path root doctor ensure-gitignore complete treehouse engine
+      dashboard new add attach files list show path root doctor ensure-gitignore complete treehouse
     return
   fi
 

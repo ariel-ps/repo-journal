@@ -106,12 +106,9 @@ fn take_flag(stripped: &[String], name: &str) -> (Vec<String>, bool) {
 }
 
 fn should_ensure_gitignore() -> bool {
-    for key in ["JOURNAL_REPO_ENSURE_GITIGNORE", "REPO_JOURNAL_ENSURE_GITIGNORE"] {
-        if let Ok(value) = std::env::var(key) {
-            return value.as_str() != "0";
-        }
-    }
-    true
+    std::env::var("JOURNAL_REPO_ENSURE_GITIGNORE")
+        .map(|value| value.as_str() != "0")
+        .unwrap_or(true)
 }
 
 fn ensure_policy(ctx: &JournalContext) -> Result<&'static str> {
@@ -189,7 +186,7 @@ pub fn run(args: Vec<String>) -> Result<()> {
         "ensure-gitignore" => cmd_ensure_gitignore(&rest, &ctx),
         "attach" => cmd_attach_handler(&rest, &ctx),
         "files" => cmd_files_handler(&rest, &ctx),
-        "treehouse" | "engine" => cmd_treehouse(&rest, &ctx),
+        "treehouse" => cmd_treehouse(&rest, &ctx),
         other => {
             let err = CliError::new(
                 "VALIDATION_ERROR",

@@ -1,7 +1,7 @@
 # Bash completion for journal-repo. Sourced from shell.bash when available.
 
 _journal_repo_slugs() {
-  local bin="${JOURNAL_REPO_CLI:-${REPO_JOURNAL_CLI:-journal-repo}}"
+  local bin="${JOURNAL_REPO_CLI:-journal-repo}"
   "$bin" complete slugs 2>/dev/null
 }
 
@@ -18,7 +18,7 @@ _journal_repo() {
   done
 
   local global_opts="--plain --json --toon -h --help -v --version"
-  local commands="dashboard new add attach files list show path root doctor ensure-gitignore complete treehouse engine"
+  local commands="dashboard new add attach files list show path root doctor ensure-gitignore complete treehouse"
 
   if [[ $cur == -* ]]; then
     case $cmd in
@@ -59,7 +59,7 @@ _journal_repo() {
         COMPREPLY=( $(compgen -W "slugs" -- "$cur") )
       fi
       ;;
-    new|list|dashboard|path|root|doctor|ensure-gitignore|treehouse|engine)
+    new|list|dashboard|path|root|doctor|ensure-gitignore|treehouse)
       ;;
   esac
 }

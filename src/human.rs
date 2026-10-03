@@ -82,7 +82,7 @@ pub fn format_help() -> String {
   journal-repo files auth-timeout
   journal-repo doctor
 
-Requires [Treehouse](https://github.com/kunchenguid/treehouse) on PATH (only supported worktree backend). Journal lives on the main checkout; pool status from `treehouse status --json`. `engine` is a deprecated alias for `treehouse`.
+Requires [Treehouse](https://github.com/kunchenguid/treehouse) on PATH (only supported worktree backend). Journal lives on the main checkout; pool status from `treehouse status --json`.
 
 Shell
   source completions/journal-repo.zsh   # zsh (also via plugin shell.zsh)
@@ -165,7 +165,7 @@ pub fn format_dashboard(
     if !ensure_gitignore {
         out.push_str(&format!(
             "  {}\n\n",
-            style.dim("Note: JOURNAL_REPO_ENSURE_GITIGNORE=0 (legacy REPO_JOURNAL_ENSURE_GITIGNORE=0)")
+            style.dim("Note: JOURNAL_REPO_ENSURE_GITIGNORE=0")
         ));
     }
 

@@ -5,7 +5,6 @@ case ":$PATH:" in
   *) PATH="$_journal_repo_root/bin:$PATH" ;;
 esac
 export JOURNAL_REPO_CLI="$_journal_repo_root/bin/journal-repo"
-export REPO_JOURNAL_CLI="$JOURNAL_REPO_CLI"
 
 if ! command -v treehouse >/dev/null 2>&1; then
   echo "journal-repo: treehouse is required on PATH (https://github.com/kunchenguid/treehouse)" >&2

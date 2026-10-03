@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.2
+
+- Removed deprecated `engine` command, `REPO_JOURNAL_*` env vars, and `REPO_JOURNAL_CLI` shell export.
+
 ## 0.8.1
 
 - Treehouse is the only worktree backend: `journal-repo treehouse` replaces generic `engine` in docs; `engine` remains a deprecated alias.
