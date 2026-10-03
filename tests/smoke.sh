@@ -59,13 +59,14 @@ action_root=$(cd "$root" && HERDR_PLUGIN_CONTEXT_JSON="$action_context" "$bin" r
   exit 1
 }
 
-# The committed bundle must run without the development node_modules tree.
+# The committed binary must run without a local Cargo build in the plugin root.
 isolated="$tmp/plugin bundle"
-mkdir -p "$isolated/bin"
+mkdir -p "$isolated/bin" "$isolated/libexec"
 cp "$root/bin/repo-journal" "$isolated/bin/repo-journal"
-cp -R "$root/dist" "$isolated/dist"
+cp "$root/libexec/repo-journal" "$isolated/libexec/repo-journal"
+chmod +x "$isolated/bin/repo-journal" "$isolated/libexec/repo-journal"
 "$isolated/bin/repo-journal" --version >/dev/null || {
-  echo "FAIL: committed bundle is not self-contained" >&2
+  echo "FAIL: committed libexec binary is missing or not executable" >&2
   exit 1
 }
 

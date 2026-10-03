@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.0
+
+- Rewrote the CLI in **Rust** (drops Node/Bun runtime; committed `libexec/repo-journal` binary).
+- Preserves commands, `--plain` / `--json`, Herdr pane context, and gitignore safety behavior.
+
 ## 0.3.1
 
 - Renamed from **herdr-journal** to **repo-journal** (generic repo tool; still installable via Herdr Setup / `herdr plugin install`).

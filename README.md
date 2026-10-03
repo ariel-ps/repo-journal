@@ -16,7 +16,7 @@ repo-journal show auth-timeout --full
 repo-journal doctor
 ```
 
-Built with [AXI](https://axi.md) ([`axi-sdk-js`](https://www.npmjs.com/package/axi-sdk-js), [`@toon-format/toon`](https://www.npmjs.com/package/@toon-format/toon)). Node **20+** required at runtime.
+Rust implementation with [TOON](https://github.com/toon-format/toon) via `serde_toon_format`. No Node runtime.
 
 ## Install
 
@@ -28,29 +28,25 @@ Standalone (Herdr 0.9.3+ host):
 herdr plugin install ariel-ps/repo-journal --ref main --yes
 ```
 
-Node **20+** required. Bun is only needed to rebuild the bundled runtime.
+Rebuild requires **Rust/Cargo** (see `rust-version` in `Cargo.toml`). Installed plugins use the committed `libexec/repo-journal` binary.
 
 ## Develop
 
 ```sh
-bun install --registry https://registry.npmjs.org
-bun run build
+cargo build --release
+sh scripts/build/install.sh
 bash tests/smoke.sh
-bun run test
+cargo test
 python3 tests/test_manifest.py
 ```
 
-The committed `dist/` bundle includes runtime dependencies, allowing
-installation without Bun when it is already current. The build contract checks
-the bundle with Node before installation succeeds.
-
 ## Repository layout
 
-- `src/` contains the TypeScript implementation.
-- `bin/repo-journal` is the stable shell launcher.
-- `dist/` contains the committed, bundled Node runtime.
-- `skills/repo-journal/` contains the agent skill.
-- `tests/` contains TypeScript, smoke, and manifest contract tests.
+- `src/` — Rust CLI and library.
+- `bin/repo-journal` — shell launcher on `PATH`.
+- `libexec/repo-journal` — release binary (committed for Node-free install).
+- `skills/repo-journal/` — agent skill.
+- `tests/` — smoke and manifest contract tests.
 
 ## License
 
