@@ -3,7 +3,7 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-bin="$root/bin/repo-journal"
+bin="$root/bin/journal-repo"
 
 command -v treehouse >/dev/null || {
   echo "FAIL: treehouse is required on PATH (see README)" >&2
@@ -72,13 +72,13 @@ action_root=$(cd "$root" && HERDR_PLUGIN_CONTEXT_JSON="$action_context" "$bin" r
 # Installed layout: launcher + libexec binary produced by the plugin build.
 isolated="$tmp/plugin bundle"
 mkdir -p "$isolated/bin" "$isolated/libexec"
-cp "$root/bin/repo-journal" "$isolated/bin/repo-journal"
-if [ ! -x "$root/libexec/repo-journal" ]; then
+cp "$root/bin/journal-repo" "$isolated/bin/journal-repo"
+if [ ! -x "$root/libexec/journal-repo" ]; then
   sh "$root/scripts/build/install.sh"
 fi
-cp "$root/libexec/repo-journal" "$isolated/libexec/repo-journal"
-chmod +x "$isolated/bin/repo-journal" "$isolated/libexec/repo-journal"
-"$isolated/bin/repo-journal" --version >/dev/null || {
+cp "$root/libexec/journal-repo" "$isolated/libexec/journal-repo"
+chmod +x "$isolated/bin/journal-repo" "$isolated/libexec/journal-repo"
+"$isolated/bin/journal-repo" --version >/dev/null || {
   echo "FAIL: libexec binary missing; run scripts/build/install.sh" >&2
   exit 1
 }

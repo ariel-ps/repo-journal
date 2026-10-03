@@ -1,13 +1,13 @@
 [package]
-name = "repo-journal"
-version = "0.7.0"
+name = "journal-repo"
+version = "0.8.0"
 edition = "2021"
 rust-version = "1.87"
 license = "MIT"
 description = "Git-root .journal/ scratch CLI for agent investigations"
 
 [[bin]]
-name = "repo-journal"
+name = "journal-repo"
 path = "src/main.rs"
 
 [dependencies]

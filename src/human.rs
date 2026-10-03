@@ -49,7 +49,7 @@ pub fn format_help() -> String {
         r#"{} — git-root investigation scratch (.journal/)
 
 {}
-  repo-journal [command] [args] [flags]
+  journal-repo [command] [args] [flags]
 
 {}
   dashboard              Repo summary and recent entries (default)
@@ -74,22 +74,22 @@ pub fn format_help() -> String {
   -V, --version
 
 {}
-  repo-journal
-  repo-journal new auth-timeout "Why login times out"
-  repo-journal add auth-timeout "repro at 40 logins"
-  repo-journal list
-  repo-journal show auth-timeout --full
-  repo-journal attach auth-timeout logs/error.txt
-  repo-journal files auth-timeout
-  repo-journal doctor
+  journal-repo
+  journal-repo new auth-timeout "Why login times out"
+  journal-repo add auth-timeout "repro at 40 logins"
+  journal-repo list
+  journal-repo show auth-timeout --full
+  journal-repo attach auth-timeout logs/error.txt
+  journal-repo files auth-timeout
+  journal-repo doctor
 
 Requires [Treehouse](https://github.com/kunchenguid/treehouse) on PATH. Journal lives on the main checkout; pool status from `treehouse status --json`.
 
 Shell
-  source completions/repo-journal.zsh   # zsh (also via plugin shell.zsh)
-  source completions/repo-journal.bash  # bash (also via plugin shell.bash)
+  source completions/journal-repo.zsh   # zsh (also via plugin shell.zsh)
+  source completions/journal-repo.bash  # bash (also via plugin shell.bash)
 "#,
-        Style::detect().bold("repo-journal"),
+        Style::detect().bold("journal-repo"),
         Style::detect().bold("Usage"),
         Style::detect().bold("Commands"),
         Style::detect().bold("Flags"),
@@ -115,7 +115,7 @@ pub fn format_dashboard(
     ensure_gitignore: bool,
 ) -> String {
     let mut out = String::new();
-    out.push_str(&format!("{} {}\n\n", style.bold("Repo Journal"), VERSION));
+    out.push_str(&format!("{} {}\n\n", style.bold("Journal Repo"), VERSION));
     let engine_line = match treehouse_version {
         Some(v) => format!("{ENGINE} {v}"),
         None => ENGINE.to_string(),
@@ -164,14 +164,17 @@ pub fn format_dashboard(
         ignore
     ));
     if !ensure_gitignore {
-        out.push_str(&format!("  {}\n\n", style.dim("Note: REPO_JOURNAL_ENSURE_GITIGNORE=0")));
+        out.push_str(&format!(
+            "  {}\n\n",
+            style.dim("Note: JOURNAL_REPO_ENSURE_GITIGNORE=0 (legacy REPO_JOURNAL_ENSURE_GITIGNORE=0)")
+        ));
     }
 
     if entries.is_empty() {
         out.push_str(&format!("{}\n\n", style.dim("No journal entries yet.")));
         out.push_str(&format!(
             "  {}\n",
-            style.dim("Try: repo-journal new <slug> \"<title>\"")
+            style.dim("Try: journal-repo new <slug> \"<title>\"")
         ));
         return out;
     }
@@ -201,13 +204,13 @@ pub fn format_dashboard(
     if entries.len() > recent.len() {
         out.push_str(&format!(
             "\n  {}\n",
-            style.dim("… use repo-journal list --all for more")
+            style.dim("… use journal-repo list --all for more")
         ));
     }
     if let Some(first) = recent.first() {
         out.push_str(&format!(
             "\n  {}\n",
-            style.dim(&format!("Try: repo-journal show {}", first.slug))
+            style.dim(&format!("Try: journal-repo show {}", first.slug))
         ));
     }
     out
@@ -219,7 +222,7 @@ pub fn format_list(entries: &[JournalEntryMeta], truncated: bool) -> String {
         return format!(
             "{}\n\n  {}\n",
             style.dim("No journal entries."),
-            style.dim("Try: repo-journal new <slug> \"<title>\"")
+            style.dim("Try: journal-repo new <slug> \"<title>\"")
         );
     }
     let mut out = format!("{}\n", style.bold("Journal entries"));
@@ -261,8 +264,8 @@ pub fn format_new(
     }
     out.push_str(&format!(
         "\n  {}\n  {}\n",
-        style.dim(&format!("Next: repo-journal add {slug} \"<finding>\"")),
-        style.dim(&format!("      repo-journal attach {slug} <path>")),
+        style.dim(&format!("Next: journal-repo add {slug} \"<finding>\"")),
+        style.dim(&format!("      journal-repo attach {slug} <path>")),
     ));
     out
 }
@@ -273,7 +276,7 @@ pub fn format_add(path: &str, slug: &str) -> String {
         "{}\n  slug: {}\n\n  {}\n",
         style.green(&format!("✓ Appended to {path}")),
         slug,
-        style.dim(&format!("Try: repo-journal show {slug}")),
+        style.dim(&format!("Try: journal-repo show {slug}")),
     )
 }
 
@@ -319,7 +322,7 @@ pub fn format_attach(entry: &str, slug: &str, attached: &[crate::artifacts::Atta
     }
     out.push_str(&format!(
         "\n  {}\n",
-        style.dim(&format!("Try: repo-journal files {slug}"))
+        style.dim(&format!("Try: journal-repo files {slug}"))
     ));
     out
 }
@@ -331,7 +334,7 @@ pub fn format_files(slug: &str, bundle: &str, paths: &[String]) -> String {
             "{}\n  bundle: {}\n\n  {}\n",
             style.bold(&format!("Files for {slug}")),
             bundle,
-            style.dim("No attachments yet. Use: repo-journal attach <slug> <path>")
+            style.dim("No attachments yet. Use: journal-repo attach <slug> <path>")
         );
     }
     let mut out = format!("{}\n  bundle: {}\n", style.bold(&format!("Files for {slug}")), bundle);
@@ -373,7 +376,7 @@ pub fn format_doctor(
         }
         out.push('\n');
         if !gitignore_ok {
-            out.push_str(&format!("  {}\n", style.dim("Fix: repo-journal ensure-gitignore")));
+            out.push_str(&format!("  {}\n", style.dim("Fix: journal-repo ensure-gitignore")));
         }
         if tracked > 0 {
             out.push_str(&format!(
@@ -400,7 +403,7 @@ pub fn format_engine(
     pool: &PoolSummary,
 ) -> String {
     let style = Style::detect();
-    let mut out = format!("{}\n", style.bold("Repo Journal engine"));
+    let mut out = format!("{}\n", style.bold("Journal Repo engine"));
     out.push_str(&format!(
         "  engine:       {}\n",
         treehouse_version

@@ -1,12 +1,17 @@
 # Changelog
 
+## 0.8.0
+
+- Renamed CLI and Herdr plugin to **journal-repo** (`dev.ariel.journal-repo`). GitHub repository remains `ariel-ps/repo-journal`.
+- Completions, skill, and env vars: prefer `JOURNAL_REPO_*`; `REPO_JOURNAL_*` kept as deprecated aliases where noted.
+
 ## 0.4.1
 
-- Git-ignore `libexec/repo-journal` so plugin builds do not dirty Herdr’s managed clone (fixes setup “local changes” on reinstall).
+- Git-ignore `libexec/journal-repo` so plugin builds do not dirty Herdr’s managed clone (fixes setup “local changes” on reinstall).
 
 ## 0.4.0
 
-- Rewrote the CLI in **Rust** (drops Node/Bun runtime; committed `libexec/repo-journal` binary).
+- Rewrote the CLI in **Rust** (drops Node/Bun runtime; committed `libexec/journal-repo` binary).
 - Preserves commands, `--plain` / `--json`, Herdr pane context, and gitignore safety behavior.
 
 ## 0.3.1
@@ -22,7 +27,7 @@
 - Git required; journal dir fixed at **repository root** `.journal/`.
 - Auto **`ensure-gitignore`** for `.journal/` (disable with `REPO_JOURNAL_ENSURE_GITIGNORE=0`).
 - Commands: `root`, `doctor`, `ensure-gitignore`; flags `--plain`, `--json`, `show --full`.
-- Node 20+ runtime via `bin/repo-journal` wrapper → `dist/bin/repo-journal.js`.
+- Node 20+ runtime via `bin/journal-repo` wrapper → `dist/bin/journal-repo.js`.
 
 ## 0.1.0
 

@@ -1,17 +1,18 @@
 # Source this file from bash to load this plugin's commands.
-_repo_journal_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_journal_repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 case ":$PATH:" in
-  *":$_repo_journal_root/bin:"*) ;;
-  *) PATH="$_repo_journal_root/bin:$PATH" ;;
+  *":$_journal_repo_root/bin:"*) ;;
+  *) PATH="$_journal_repo_root/bin:$PATH" ;;
 esac
-export REPO_JOURNAL_CLI="$_repo_journal_root/bin/repo-journal"
+export JOURNAL_REPO_CLI="$_journal_repo_root/bin/journal-repo"
+export REPO_JOURNAL_CLI="$JOURNAL_REPO_CLI"
 
 if ! command -v treehouse >/dev/null 2>&1; then
-  echo "repo-journal: treehouse is required on PATH (https://github.com/kunchenguid/treehouse)" >&2
+  echo "journal-repo: treehouse is required on PATH (https://github.com/kunchenguid/treehouse)" >&2
 fi
 
-if [[ -r "$_repo_journal_root/completions/repo-journal.bash" ]]; then
-  # shellcheck source=completions/repo-journal.bash
-  source "$_repo_journal_root/completions/repo-journal.bash"
+if [[ -r "$_journal_repo_root/completions/journal-repo.bash" ]]; then
+  # shellcheck source=completions/journal-repo.bash
+  source "$_journal_repo_root/completions/journal-repo.bash"
 fi
-unset _repo_journal_root
+unset _journal_repo_root

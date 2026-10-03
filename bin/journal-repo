@@ -2,10 +2,10 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CLI="$ROOT/libexec/repo-journal"
+CLI="$ROOT/libexec/journal-repo"
 
 if [ ! -x "$CLI" ]; then
-  echo "repo-journal: missing $CLI (run: sh scripts/build/install.sh)" >&2
+  echo "journal-repo: missing $CLI (run: sh scripts/build/install.sh)" >&2
   exit 1
 fi
 

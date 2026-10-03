@@ -32,7 +32,7 @@ pub fn require_treehouse() -> Result<()> {
     Err(
         CliError::new(
             "TREEHOUSE_REQUIRED",
-            "repo-journal requires treehouse on PATH",
+            "journal-repo requires treehouse on PATH",
         )
         .with_suggestions(vec![INSTALL_HINT, "https://github.com/kunchenguid/treehouse"]),
     )

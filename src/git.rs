@@ -13,7 +13,7 @@ fn git(args: &[&str], cwd: &Path) -> Result<String> {
         return Err(
             CliError::new(
                 "NOT_GIT_REPO",
-                "repo-journal requires a git work tree",
+                "journal-repo requires a git work tree",
             )
             .with_suggestions(vec![
                 "cd into a clone",

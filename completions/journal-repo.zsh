@@ -1,16 +1,16 @@
-#compdef repo-journal
-# Zsh completion for repo-journal. Sourced from shell.zsh when compdef is available.
+#compdef journal-repo
+# Zsh completion for journal-repo. Sourced from shell.zsh when compdef is available.
 
-_repo_journal_slugs() {
+_journal_repo_slugs() {
   local -a slugs
-  local bin="${REPO_JOURNAL_CLI:-repo-journal}"
+  local bin="${JOURNAL_REPO_CLI:-${REPO_JOURNAL_CLI:-journal-repo}}"
   slugs=("${(@f)$($=bin complete slugs 2>/dev/null)}")
   if (( ${#slugs} )); then
     _describe 'journal slug' slugs
   fi
 }
 
-_repo_journal_options() {
+_journal_repo_options() {
   local cmd=$1
   case $cmd in
     show)
@@ -28,7 +28,7 @@ _repo_journal_options() {
   esac
 }
 
-_repo_journal() {
+_journal_repo() {
   local cmd="" cmd_idx=0 i
 
   for (( i = 2; i < CURRENT; i++ )); do
@@ -39,20 +39,20 @@ _repo_journal() {
   done
 
   if [[ ${words[CURRENT]} == -* ]] || (( CURRENT == 2 && ${words[2]:0:1} == '-' )); then
-    _repo_journal_options "$cmd"
+    _journal_repo_options "$cmd"
     return
   fi
 
   if (( CURRENT == 2 )); then
     _values 'command' \
-      dashboard new add attach files list show path root doctor ensure-gitignore complete
+      dashboard new add attach files list show path root doctor ensure-gitignore complete engine
     return
   fi
 
   case $cmd in
     show|add|attach|files)
       if (( CURRENT == cmd_idx + 1 )); then
-        _repo_journal_slugs
+        _journal_repo_slugs
       fi
       ;;
     complete)
@@ -64,5 +64,5 @@ _repo_journal() {
 }
 
 if (( $+functions[compdef] )); then
-  compdef _repo_journal repo-journal
+  compdef _journal_repo journal-repo
 fi

@@ -10,8 +10,8 @@ class ManifestContractTests(unittest.TestCase):
     def test_journal_action_contract(self):
         manifest = tomllib.loads((ROOT / "herdr-plugin.toml").read_text())
 
-        self.assertEqual(manifest["id"], "dev.ariel.repo-journal")
-        self.assertEqual(manifest["version"], "0.7.0")
+        self.assertEqual(manifest["id"], "dev.ariel.journal-repo")
+        self.assertEqual(manifest["version"], "0.8.0")
         self.assertEqual(
             manifest["build"],
             [{"command": ["sh", "./scripts/build/install.sh"]}],
@@ -26,7 +26,7 @@ class ManifestContractTests(unittest.TestCase):
                     "command": [
                         "zsh",
                         "-c",
-                        "source ./shell.zsh && repo-journal",
+                        "source ./shell.zsh && journal-repo",
                     ],
                 },
                 {
@@ -36,7 +36,7 @@ class ManifestContractTests(unittest.TestCase):
                     "command": [
                         "zsh",
                         "-c",
-                        "source ./shell.zsh && repo-journal list",
+                        "source ./shell.zsh && journal-repo list",
                     ],
                 },
             ],

@@ -1,8 +1,8 @@
-id = "dev.ariel.repo-journal"
-name = "Repo Journal"
-version = "0.7.0"
+id = "dev.ariel.journal-repo"
+name = "Journal Repo"
+version = "0.8.0"
 min_herdr_version = "0.9.3"
-description = "Git-root .journal/ CLI (requires Treehouse). Human output; gitignored scratch on main checkout."
+description = "Git-root .journal/ CLI journal-repo (requires Treehouse). Human output; gitignored scratch on main checkout."
 platforms = ["macos", "linux"]
 
 [[build]]
@@ -12,10 +12,10 @@ command = ["sh", "./scripts/build/install.sh"]
 id = "dashboard"
 title = "Journal dashboard"
 contexts = ["pane", "workspace"]
-command = ["zsh", "-c", "source ./shell.zsh && repo-journal"]
+command = ["zsh", "-c", "source ./shell.zsh && journal-repo"]
 
 [[actions]]
 id = "list"
 title = "List journal entries"
 contexts = ["pane", "workspace"]
-command = ["zsh", "-c", "source ./shell.zsh && repo-journal list"]
+command = ["zsh", "-c", "source ./shell.zsh && journal-repo list"]

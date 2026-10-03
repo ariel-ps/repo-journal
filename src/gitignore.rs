@@ -4,7 +4,7 @@ use std::path::Path;
 
 use crate::error::{CliError, Result};
 
-pub const GITIGNORE_BLOCK: &str = "# Repo Journal — local investigation scratch (repo-journal)
+pub const GITIGNORE_BLOCK: &str = "# Journal Repo — local investigation scratch (journal-repo)
 /.journal/
 ";
 

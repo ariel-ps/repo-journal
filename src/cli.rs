@@ -107,7 +107,12 @@ fn take_flag(stripped: &[String], name: &str) -> (Vec<String>, bool) {
 }
 
 fn should_ensure_gitignore() -> bool {
-    std::env::var("REPO_JOURNAL_ENSURE_GITIGNORE").ok().as_deref() != Some("0")
+    for key in ["JOURNAL_REPO_ENSURE_GITIGNORE", "REPO_JOURNAL_ENSURE_GITIGNORE"] {
+        if let Ok(value) = std::env::var(key) {
+            return value.as_str() != "0";
+        }
+    }
+    true
 }
 
 fn ensure_policy(ctx: &JournalContext) -> Result<&'static str> {
@@ -145,7 +150,7 @@ pub fn run(args: Vec<String>) -> Result<()> {
         return Ok(());
     }
     if args.iter().any(|a| a == "--version" || a == "-v") {
-        print_out(&format!("repo-journal {VERSION}\n"))?;
+        print_out(&format!("journal-repo {VERSION}\n"))?;
         return Ok(());
     }
 
@@ -214,7 +219,7 @@ fn cmd_complete(args: &[String]) -> Result<()> {
     if flags.stripped.len() != 1 || flags.stripped[0] != "slugs" {
         return Err(
             CliError::new("VALIDATION_ERROR", "complete requires: slugs").with_suggestions(vec![
-                "repo-journal complete slugs",
+                "journal-repo complete slugs",
             ]),
         );
     }
@@ -283,11 +288,11 @@ fn cmd_dashboard(args: &[String], ctx: &JournalContext) -> Result<()> {
     );
 
     let help_strings: Vec<String> = if entries.is_empty() {
-        vec!["repo-journal new <slug> \"<title>\"".into()]
+        vec!["journal-repo new <slug> \"<title>\"".into()]
     } else {
         vec![
-            format!("repo-journal show {}", recent[0].slug),
-            "repo-journal new <slug> \"<title>\"".into(),
+            format!("journal-repo show {}", recent[0].slug),
+            "journal-repo new <slug> \"<title>\"".into(),
         ]
     };
     let help: Vec<&str> = help_strings.iter().map(String::as_str).collect();
@@ -334,7 +339,7 @@ fn cmd_new_handler(args: &[String], ctx: &JournalContext) -> Result<()> {
     if flags.stripped.is_empty() {
         return Err(
             CliError::new("VALIDATION_ERROR", "new requires a slug").with_suggestions(vec![
-                "repo-journal new auth-timeout \"Why login times out\"",
+                "journal-repo new auth-timeout \"Why login times out\"",
             ]),
         );
     }
@@ -353,8 +358,8 @@ fn cmd_new_handler(args: &[String], ctx: &JournalContext) -> Result<()> {
     let mode = flags.output_mode();
 
     let help_strings = vec![
-        format!("repo-journal add {slug} \"<finding>\""),
-        format!("repo-journal show {slug}"),
+        format!("journal-repo add {slug} \"<finding>\""),
+        format!("journal-repo show {slug}"),
     ];
     let help: Vec<&str> = help_strings.iter().map(String::as_str).collect();
     let mut body = BTreeMap::new();
@@ -379,7 +384,7 @@ fn cmd_add_handler(args: &[String], ctx: &JournalContext) -> Result<()> {
     if flags.stripped.len() < 2 {
         return Err(
             CliError::new("VALIDATION_ERROR", "add requires a slug and note text").with_suggestions(
-                vec!["repo-journal add auth-timeout \"repro at 40 logins\""],
+                vec!["journal-repo add auth-timeout \"repro at 40 logins\""],
             ),
         );
     }
@@ -398,8 +403,8 @@ fn cmd_add_handler(args: &[String], ctx: &JournalContext) -> Result<()> {
     let mode = flags.output_mode();
 
     let help_strings = vec![
-        format!("repo-journal show {slug}"),
-        format!("repo-journal show {slug} --full"),
+        format!("journal-repo show {slug}"),
+        format!("journal-repo show {slug} --full"),
     ];
     let help: Vec<&str> = help_strings.iter().map(String::as_str).collect();
     let mut body = BTreeMap::new();
@@ -454,7 +459,7 @@ fn cmd_list(args: &[String], ctx: &JournalContext) -> Result<()> {
                     json!({"shown": 0, "total": 0, "empty": true}),
                 ),
             ]),
-            vec!["repo-journal new <slug> \"<title>\""],
+            vec!["journal-repo new <slug> \"<title>\""],
         )
     } else {
         with_help(
@@ -475,7 +480,7 @@ fn cmd_list(args: &[String], ctx: &JournalContext) -> Result<()> {
                     }),
                 ),
             ]),
-            vec!["repo-journal show <slug>", "repo-journal list --all"],
+            vec!["journal-repo show <slug>", "journal-repo list --all"],
         )
     };
     let value = Value::Object(body.into_iter().collect());
@@ -490,7 +495,7 @@ fn cmd_show(args: &[String], ctx: &JournalContext) -> Result<()> {
     if stripped.len() != 1 {
         return Err(
             CliError::new("VALIDATION_ERROR", "show requires exactly one slug").with_suggestions(
-                vec!["repo-journal show auth-timeout"],
+                vec!["journal-repo show auth-timeout"],
             ),
         );
     }
@@ -505,8 +510,8 @@ fn cmd_show(args: &[String], ctx: &JournalContext) -> Result<()> {
             ),
         )
         .with_suggestions(vec![
-            "repo-journal list",
-            &format!("repo-journal new {} \"<title>\"", stripped[0]),
+            "journal-repo list",
+            &format!("journal-repo new {} \"<title>\"", stripped[0]),
         ])
     })?;
 
@@ -539,10 +544,10 @@ fn cmd_show(args: &[String], ctx: &JournalContext) -> Result<()> {
 
     let mut help = Vec::new();
     if truncated {
-        help.push(format!("repo-journal show {slug} --full"));
+        help.push(format!("journal-repo show {slug} --full"));
     }
     if with_files && artifact_paths.is_empty() {
-        help.push(format!("repo-journal attach {slug} <path>"));
+        help.push(format!("journal-repo attach {slug} <path>"));
     }
     let help_refs: Vec<&str> = help.iter().map(String::as_str).collect();
 
@@ -566,8 +571,8 @@ fn cmd_attach_handler(args: &[String], ctx: &JournalContext) -> Result<()> {
         return Err(
             CliError::new("VALIDATION_ERROR", "attach requires a slug and at least one path")
                 .with_suggestions(vec![
-                    "repo-journal attach auth-timeout logs/error.txt",
-                    "repo-journal attach auth-timeout repro/ --as repro",
+                    "journal-repo attach auth-timeout logs/error.txt",
+                    "journal-repo attach auth-timeout repro/ --as repro",
                 ]),
         );
     }
@@ -616,7 +621,7 @@ fn cmd_files_handler(args: &[String], ctx: &JournalContext) -> Result<()> {
     if flags.stripped.len() != 1 {
         return Err(
             CliError::new("VALIDATION_ERROR", "files requires exactly one slug").with_suggestions(
-                vec!["repo-journal files auth-timeout"],
+                vec!["journal-repo files auth-timeout"],
             ),
         );
     }
@@ -627,8 +632,8 @@ fn cmd_files_handler(args: &[String], ctx: &JournalContext) -> Result<()> {
             format!("no entry matching '{}'", flags.stripped[0]),
         )
         .with_suggestions(vec![
-            "repo-journal list",
-            &format!("repo-journal new {} \"<title>\"", flags.stripped[0]),
+            "journal-repo list",
+            &format!("journal-repo new {} \"<title>\"", flags.stripped[0]),
         ])
     })?;
     let bundle = artifact_dir_for_entry(&entry_md);
@@ -737,9 +742,9 @@ fn cmd_doctor(args: &[String], ctx: &JournalContext) -> Result<()> {
     );
     let mode = flags.output_mode();
 
-    let mut help = vec!["repo-journal new <slug> \"<title>\"".to_string()];
+    let mut help = vec!["journal-repo new <slug> \"<title>\"".to_string()];
     if !gitignore_ok {
-        help.insert(0, "repo-journal ensure-gitignore".into());
+        help.insert(0, "journal-repo ensure-gitignore".into());
     }
     if !tracked.is_empty() {
         help.insert(
@@ -785,7 +790,7 @@ fn cmd_ensure_gitignore(args: &[String], ctx: &JournalContext) -> Result<()> {
         "ok".into(),
         json!({"op": "ensure-gitignore", "result": result}),
     );
-    let body = with_help(body, vec!["repo-journal doctor"]);
+    let body = with_help(body, vec!["journal-repo doctor"]);
     let value = Value::Object(body.into_iter().collect());
     print_value(&value, flags.output_mode(), &human)?;
     Ok(())

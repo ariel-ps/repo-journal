@@ -1,11 +1,11 @@
-# Bash completion for repo-journal. Sourced from shell.bash when available.
+# Bash completion for journal-repo. Sourced from shell.bash when available.
 
-_repo_journal_slugs() {
-  local bin="${REPO_JOURNAL_CLI:-repo-journal}"
+_journal_repo_slugs() {
+  local bin="${JOURNAL_REPO_CLI:-${REPO_JOURNAL_CLI:-journal-repo}}"
   "$bin" complete slugs 2>/dev/null
 }
 
-_repo_journal() {
+_journal_repo() {
   local cur prev words cword
   _init_completion -n : || return
 
@@ -18,18 +18,18 @@ _repo_journal() {
   done
 
   local global_opts="--plain --json --toon -h --help -v --version"
-  local commands="dashboard new add attach files list show path root doctor ensure-gitignore complete"
+  local commands="dashboard new add attach files list show path root doctor ensure-gitignore complete engine"
 
   if [[ $cur == -* ]]; then
     case $cmd in
       show)
         COMPREPLY=( $(compgen -W "$global_opts --full --with-files" -- "$cur") )
         ;;
-      attach)
-        COMPREPLY=( $(compgen -W "$global_opts --as" -- "$cur") )
-        ;;
       list)
         COMPREPLY=( $(compgen -W "$global_opts --all -a" -- "$cur") )
+        ;;
+      attach)
+        COMPREPLY=( $(compgen -W "$global_opts --as" -- "$cur") )
         ;;
       complete)
         COMPREPLY=( $(compgen -W "$global_opts slugs" -- "$cur") )
@@ -50,7 +50,7 @@ _repo_journal() {
     show|add|attach|files)
       if [[ $prev == "$cmd" ]]; then
         local slugs
-        slugs=$(_repo_journal_slugs)
+        slugs=$(_journal_repo_slugs)
         COMPREPLY=( $(compgen -W "$slugs" -- "$cur") )
       fi
       ;;
@@ -59,11 +59,11 @@ _repo_journal() {
         COMPREPLY=( $(compgen -W "slugs" -- "$cur") )
       fi
       ;;
-    new|list|dashboard|path|root|doctor|ensure-gitignore)
+    new|list|dashboard|path|root|doctor|ensure-gitignore|engine)
       ;;
   esac
 }
 
 if [[ -n ${BASH_VERSION:-} ]]; then
-  complete -F _repo_journal repo-journal
+  complete -F _journal_repo journal-repo
 fi

@@ -39,7 +39,7 @@ fn assert_in_worktrees(path: &Path, worktree_roots: &[PathBuf], label: &str) -> 
     )
     .with_suggestions(vec![
         "use a path under the main checkout or a treehouse slot",
-        "repo-journal root --plain",
+        "journal-repo root --plain",
     ]))
 }
 
@@ -212,7 +212,7 @@ pub fn cmd_attach(
     if source_raws.is_empty() {
         return Err(
             CliError::new("VALIDATION_ERROR", "attach requires at least one path").with_suggestions(
-                vec!["repo-journal attach auth-timeout logs/error.txt"],
+                vec!["journal-repo attach auth-timeout logs/error.txt"],
             ),
         );
     }
