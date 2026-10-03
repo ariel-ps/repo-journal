@@ -1,42 +1,57 @@
-# Herdr Journal
+# Repo Journal
 
-A lightweight CLI for the `.journal/` investigation-notes convention, plus a
-bundled skill so Claude Code (and other agents) use it consistently instead
-of freehand files.
+AXI-style CLI for **git-root** investigation scratch files in `.journal/`, plus a bundled agent skill.
+
+- Requires a **git work tree** (`git rev-parse --show-toplevel`).
+- Writes only under **`<repo>/.journal/`** (works from any subdirectory).
+- Appends **`.journal/`** to `.gitignore` by default (`REPO_JOURNAL_ENSURE_GITIGNORE=0` to disable).
+- **TOON** output by default; **`--plain`** for scripts; **`--json`** for machines.
 
 ```sh
-herdr-journal new "auth-timeout" "Why login times out under load"   # -> path
-herdr-journal add auth-timeout "repro'd at 40 concurrent logins"
-herdr-journal list [--all]
-herdr-journal show auth-timeout
-herdr-journal path
+repo-journal                                    # dashboard
+repo-journal new auth-timeout "Why login times out" --plain
+repo-journal add auth-timeout "repro at 40 logins"
+repo-journal list
+repo-journal show auth-timeout --full
+repo-journal doctor
 ```
 
-Entries live at `<project root>/.journal/YYYY-MM-DD-<slug>.md`. `list` and
-`show` search upward from the current directory for an existing `.journal/`
-or the nearest `.git` root, so they work from any subdirectory.
-
-No daemon, no database, no dependencies beyond coreutils — it's one shell
-script.
+Built with [AXI](https://axi.md) ([`axi-sdk-js`](https://www.npmjs.com/package/axi-sdk-js), [`@toon-format/toon`](https://www.npmjs.com/package/@toon-format/toon)). Node **20+** required at runtime.
 
 ## Install
 
-[Herdr Setup](https://github.com/ariel-ps/herdr-setup) installs prerequisites
-and lets you select this plugin in `dependencies.json`.
+**Via [Herdr Setup](https://github.com/ariel-ps/herdr-setup)** (recommended): included in `dependencies.json` as a generic repo tool, delivered as a Herdr plugin for PATH and pane actions.
 
-With Herdr 0.9.3+ already installed:
+Standalone (Herdr 0.9.3+ host):
 
 ```sh
-herdr plugin install ariel-ps/herdr-journal --ref main --yes
+herdr plugin install ariel-ps/repo-journal --ref main --yes
 ```
 
-Use a commit or release tag instead of `main` to pin a version. Supports
-macOS and Ubuntu/Debian Linux.
+Node **20+** required. Bun is only needed to rebuild the bundled runtime.
 
-Installing the plugin also makes the `herdr-journal` skill available to
-Claude Code, so agents reach for the CLI automatically when asked to
-investigate something.
+## Develop
+
+```sh
+bun install --registry https://registry.npmjs.org
+bun run build
+bash tests/smoke.sh
+bun run test
+python3 tests/test_manifest.py
+```
+
+The committed `dist/` bundle includes runtime dependencies, allowing
+installation without Bun when it is already current. The build contract checks
+the bundle with Node before installation succeeds.
+
+## Repository layout
+
+- `src/` contains the TypeScript implementation.
+- `bin/repo-journal` is the stable shell launcher.
+- `dist/` contains the committed, bundled Node runtime.
+- `skills/repo-journal/` contains the agent skill.
+- `tests/` contains TypeScript, smoke, and manifest contract tests.
 
 ## License
 
-Original project code is licensed under the [MIT License](LICENSE).
+[MIT](LICENSE)

@@ -1,12 +1,21 @@
-id = "dev.ariel.herdr-journal"
-name = "Journal"
-version = "0.1.0"
+id = "dev.ariel.repo-journal"
+name = "Repo Journal"
+version = "0.3.1"
 min_herdr_version = "0.9.3"
-description = "Lightweight .journal/ CLI for agent investigations, with a bundled skill."
+description = "AXI .journal/ CLI for agent investigations (git-root scratch, gitignored by default)."
 platforms = ["macos", "linux"]
+
+[[build]]
+command = ["sh", "./scripts/build/install.sh"]
+
+[[actions]]
+id = "dashboard"
+title = "Journal dashboard"
+contexts = ["pane", "workspace"]
+command = ["zsh", "-c", "source ./shell.zsh && repo-journal"]
 
 [[actions]]
 id = "list"
 title = "List journal entries"
 contexts = ["pane", "workspace"]
-command = ["zsh", "-c", "source ./shell.zsh && herdr-journal list"]
+command = ["zsh", "-c", "source ./shell.zsh && repo-journal list"]
